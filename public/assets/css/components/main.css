@@ -1,0 +1,21 @@
+/*Colors*/
+/* No se han definido los colores para estos estilos */
+/* :root {
+
+} */
+
+/* DESCRIPCION: Este archivo tiene los estilos para main, esto incluye los contenedores */
+
+/* TODO: Convertir al main en un contenedor grip */
+
+/*main*/
+main{
+    margin-top: 4.8rem;
+    margin-left: 4rem;
+    padding: 2rem;
+    transition: margin-left 0.5s ease;
+}
+
+main.menu-toggle{
+    margin-left: 14rem;
+}

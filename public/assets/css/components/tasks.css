@@ -1,0 +1,329 @@
+/* Estilos de cabecera para las secciones */
+.tasks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: default;
+    user-select: text;
+    gap: 8px;
+}
+
+.tasks-header-pending {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tasks-header-completed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    justify-content: flex-start;
+}
+
+.tasks-header:hover {
+    color: #0056b3;
+}
+
+.section-title {
+    font-size: 22px;
+    color: #333;
+    margin: 0;
+}
+
+/* Contenedor flexible para las tarjetas de tareas */
+.tasks-flex {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.tasks-flex .task-card {
+    width: 49%;
+    margin-bottom: 16px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+/* Estilos para tarjeta de tarea */
+.task-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 80px;
+    box-sizing: border-box;
+    position: relative;
+    animation: fade-in 0.3s ease-in-out;
+    transition: all 0.2s ease;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgb(0 0 0 / 15%);
+}
+
+/* Botón de completar tarea */
+.task-checkbox {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    transition: all 0.4s;
+}
+
+.task-checkbox:hover {
+    border-color: #666;
+}
+
+.task-checkbox.completed {
+    background: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+/* Contenido textual de la tarea */
+.task-content {
+    flex: 1;
+    padding-right: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    height: 100%;
+}
+
+.task-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 3px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.task-description {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+/* Pie de la tarjeta */
+.task-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.task-date {
+    margin-right: 5px;
+    font-size: 12px;
+    color: #666;
+    padding: 3px 8px;
+    white-space: nowrap;
+}
+
+.task-date.past {
+    color: #ffffff;
+    background-color: #c54b57;
+    border-radius: 8px;
+}
+
+.task-date.today {
+    color: #ffffff;
+    background-color: #e4790e;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.task-date.future {
+    color: #ffffff;
+    background-color: #0e7f9199;
+    border-radius: 8px;
+}
+
+.task-trash-button {
+    margin-right: 2px;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.task-trash-button:hover {
+    color: #7e7171;
+}
+
+/* Estilos para tareas completadas */
+.task-card.completed {
+    background: #f9f9f9;
+    opacity: 0.85;
+
+    .task-date.past {
+        color: #ffffff;
+        background-color: #589804f9;
+        border-radius: 8px;
+    }
+
+    .task-date.today {
+        color: #ffffff;
+        background-color: #589804f9;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+
+    .task-date.future {
+        color: #ffffff;
+        background-color: #589804f9;
+        border-radius: 8px;
+    }
+}
+
+.task-card.completed .task-title {
+    text-decoration: line-through;
+    color: #777;
+}
+
+.completed-tasks {
+    margin-top: 10px;
+}
+
+/* Mensaje cuando no hay tareas */
+.no-tasks-message {
+    width: 100%;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: #666;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Botón para añadir tareas */
+.add-task-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #4784d3;
+    color: white;
+    border: none;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    transition: background 0.2s, transform 0.2s;
+}
+
+.add-task-button:hover {
+    background: #3568af;
+}
+
+/* Manejo de flechas para expandir/colapsar */
+.toggle-arrow {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.toggle-arrow.rotated {
+    transform: rotate(-90deg);
+}
+
+/* Comportamiento colapsable */
+.collapsible.collapsed {
+    display: none;
+}
+
+/* Animaciones */
+@keyframes fade-in {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
+
+/* Notificaciones */
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 5px;
+    color: white;
+    animation: slide-in 0.5s ease-out;
+    z-index: 1000;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.notification.success {
+    background-color: #2ecc71;
+}
+
+.notification.error {
+    background-color: #e74c3c;
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Media queries para dispositivos móviles */
+@media screen and (max-width: 790px) {
+    .tasks-flex .task-card {
+        width: 100%;
+    }
+    
+    .tasks-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .add-task-button {
+        margin-top: 10px;
+    }
+    
+    .task-card {
+        height: auto;
+        padding: 12px;
+    }
+
+    .task-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .task-date {
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+}

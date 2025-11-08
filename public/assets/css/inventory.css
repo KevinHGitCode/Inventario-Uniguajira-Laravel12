@@ -1,0 +1,125 @@
+/* Estilos para el encabezado de inventario */
+.inventory-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.inventory-controls {
+    display: flex;
+    align-items: center;
+}
+
+/* Estilos para el control de estado */
+.status-control {
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    margin-right: 32px; /* Aumentado de 12px a 20px */
+}
+
+.status-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+    margin-right: 18px;
+}
+
+.status-lights {
+    display: flex;
+    gap: 18px; /* Aumentado de 8px a 12px */
+}
+
+.light {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    position: relative;
+}
+
+.light:hover {
+    transform: scale(1.1);
+}
+
+/* Estados activos de las luces */
+.light-red {
+    background-color: #dc3545;
+}
+
+.light-yellow {
+    background-color: #ffc107;
+}
+
+.light-green {
+    background-color: #28a745;
+}
+
+/* Estados inactivos (desactivados) de las luces */
+.light-red.inactive {
+    background-color: rgba(220, 53, 69, 0.3);
+}
+
+.light-yellow.inactive {
+    background-color: rgba(255, 193, 7, 0.3);
+}
+
+.light-green.inactive {
+    background-color: rgba(40, 167, 69, 0.3);
+}
+
+.light.active {
+    border-color: #212529;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilo para el botón de editar */
+.edit-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.edit-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 768px) {
+    .inventory-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .inventory-controls {
+        width: 100%;
+        margin-top: 12px;
+    }
+    
+    .status-control {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

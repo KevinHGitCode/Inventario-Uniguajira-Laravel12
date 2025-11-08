@@ -1,0 +1,65 @@
+/* Colors */
+:root {
+    --background-color: #F8FAFC;
+    --text-color: #4A5568;
+    --text-selected-color: #434395d2;
+    --background-selected: #e1e3ec;
+    --background-hover: #e4edf765;
+    --border-color: #7d7f82;
+}
+
+/* DESCRIPCION: Este archivo tiene los estilos para el sidebar */
+
+/* Sidebar */
+.sidebar {
+    margin-top: 4rem;
+    width: 4rem;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    padding: 1.1rem 0;
+    border-right: 1px solid #ccc;
+    overflow-y: auto;
+    background-color: var(--background-color);
+    transition: width 0.5s ease;
+}
+
+/* Cambia el ancho del sidebar cuando se activa el toggle del menú */
+.sidebar.menu-toggle {
+    width: 14rem;
+}
+
+/* Estilo de los enlaces dentro del sidebar */
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 1.3rem;
+    padding: 0.9rem 0.7rem;
+    text-decoration: none;
+    margin: 0 0.5rem;
+    border-radius: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--text-color);
+}
+
+.sidebar a.selected {
+    /* Estilo de los enlaces seleccionados */
+    color: var(--text-selected-color);
+    background-color: var(--background-selected);
+    font-weight: 500;
+}
+
+.sidebar img {
+    width: 1.6rem;
+}
+
+.sidebar a:hover {
+    background-color: var(--background-selected);
+    border-radius: 0.5rem;
+    color: var(--text-selected-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+}

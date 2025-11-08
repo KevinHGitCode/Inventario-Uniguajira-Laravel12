@@ -1,0 +1,376 @@
+.container.content {
+    padding: 20px;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+/* Vista de carpetas de reportes */
+.report-folder-card {
+    background: #fff;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    border: 2px solid #e0e0e0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.report-folder-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.4);
+}
+
+.report-folder-left {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.report-folder-icon {
+    width: 40px;
+    height: 40px;
+    fill: #555;
+    border-radius: 8px;
+    margin-right: 16px;
+}
+
+.report-folder-center {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.report-folder-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    margin: 0;
+}
+
+.report-folder-stats {
+    font-size: 14px;
+    color: #555555d5;
+    margin: 5px 0;
+}
+
+.report-stat-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.report-stat-item i {
+    margin-right: 5px;
+    font-size: 12px;
+    width: 16px;
+    height: 16px;
+    object-fit: cover;
+}
+
+.report-folder-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.report-create-btn {
+    background-color: #9c3a3a;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    margin-left: 10px;
+}
+
+.report-create-btn:hover {
+    background-color: #a3333d;
+    transform: translateY(-2px);
+}
+
+/* Vista de reportes dentro de una carpeta */
+.report-back-and-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-btn-back {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    border: 2px solid #e0e0e0;
+}
+
+.report-btn-back:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.report-btn-back i {
+    margin-right: 5px;
+}
+
+/* Panel de opciones de generación */
+.report-options-panel {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    border: 2px solid #e0e0e0;
+}
+
+.report-option-box h3 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.report-generation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 10px;
+}
+
+.report-generation-list li {
+    padding: 10px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.report-generation-list li:hover {
+    color: #a3333d;
+    background-color: #f5f5f5;
+}
+
+.report-generation-list li i {
+    margin-right: 8px;
+    font-size: 12px;
+    width: 16px;
+    height: 16px;
+    object-fit: cover;
+}
+
+/* Elementos de reportes PDF - ACTUALIZADO CON DISEÑO UNIFICADO */
+.report-item-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.report-item-card {
+    background: #fff;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    border: 2px solid #e0e0e0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.report-item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.4);
+}
+
+.report-item-left {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.report-item-icon {
+    width: 40px;
+    height: 40px;
+    fill: #555;
+    border-radius: 8px;
+    margin-right: 16px;
+}
+
+.report-item-center {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.report-item-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    margin: 0;
+}
+
+.report-item-date {
+    font-size: 14px;
+    color: #555555d5;
+    margin: 5px 0;
+}
+
+.report-item-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.report-btn-download {
+    background-color: #9c3a3a;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.report-btn-download:hover {
+    background-color: #a3333d;
+    transform: translateY(-2px);
+    color: white;
+}
+
+.report-btn-download i {
+    margin-right: 5px;
+}
+
+/* Estado vacío */
+.report-empty-state {
+    text-align: center;
+    padding: 50px 0;
+    color: #888;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e0e0e0;
+    margin: 20px 0;
+}
+
+.report-empty-state i {
+    margin-bottom: 15px;
+    font-size: 48px;
+}
+
+/* Ocultar elementos */
+.hidden {
+    display: none;
+}
+
+/* Modal */
+.report-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+
+.report-modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 0;
+    width: 500px;
+    max-width: 90%;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    border: 2px solid #e0e0e0;
+    overflow: hidden;
+}
+
+.report-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f8f8;
+}
+
+.report-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.report-modal-close {
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #555;
+    transition: color 0.3s;
+}
+
+.report-modal-close:hover {
+    color: #a3333d;
+}
+
+.report-modal-body {
+    padding: 20px;
+}
+
+.report-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.report-btn-cancel {
+    background-color: #f0f0f0;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.report-btn-cancel:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.report-btn-save {
+    background-color: #9c3a3a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.report-btn-save:hover {
+    background-color: #a3333d;
+    transform: translateY(-2px);
+}

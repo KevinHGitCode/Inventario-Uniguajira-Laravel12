@@ -1,32 +1,56 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
-use Livewire\Volt\Volt;
+// use Laravel\Fortify\Features;
+// use Livewire\Volt\Volt;
+use App\Http\Controllers\{
+    HomeController,
+    GoodsController,
+    InventoryController,
+    ReportController,
+    UserController,
+    RecordController
+};
 
+// redirect to home
 Route::get('/', function () {
-    return view('welcome');
-})->name('home');
-
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
-
-    Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
-    Volt::route('settings/password', 'settings.password')->name('user-password.edit');
-    Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
-
-    Volt::route('settings/two-factor', 'settings.two-factor')
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
-        ->name('two-factor.show');
+    return redirect()->route('home.index');
 });
+
+Route::get('home', [HomeController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('home.index');
+
+// profile
+Route::get('profile', function () {
+    return 'Profile route';
+})->name('profile');
+
+// routes.index
+Route::middleware('auth')->group(function () {
+    Route::get('goods', [GoodsController::class, 'index'])->name('goods.index');
+    Route::get('inventories', [InventoryController::class, 'index'])->name('inventories.index');
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::get('records', [RecordController::class, 'index'])->name('records.index');
+});
+
+
+// Route::middleware(['auth'])->group(function () {
+//     Route::redirect('settings', 'settings/profile');
+
+//     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
+//     Volt::route('settings/password', 'settings.password')->name('user-password.edit');
+//     Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
+
+//     Volt::route('settings/two-factor', 'settings.two-factor')
+//         ->middleware(
+//             when(
+//                 Features::canManageTwoFactorAuthentication()
+//                     && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+//                 ['password.confirm'],
+//                 [],
+//             ),
+//         )
+//         ->name('two-factor.show');
+// });

@@ -1,0 +1,111 @@
+/* Estilos para la barra de control */
+
+/* Versión con solo fade, sin movimiento */
+.control-bar {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 10px;
+    height: 42px;
+    
+    /* Propiedades para fade simple */
+    opacity: 0;
+    max-height: 38px;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, max-height 0.2s ease;
+
+    /* Hacer que la barra de control se mantenga fija al hacer scroll */
+    position: sticky;
+    top: 90px; /* Se fija en la parte superior */
+    z-index: 10; /* Asegura que esté por encima de otros elementos */
+}
+
+.control-bar.visible {
+    opacity: 1;
+    max-height: 60px;
+    pointer-events: auto;
+}
+
+.selected-name {
+    font-weight: 500;
+    margin-right: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #333;
+    padding-left: 8px;
+}
+
+.control-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.control-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn:hover {
+    background-color: rgb(0 0 0 / 10%);
+    color: #555;
+}
+
+/* Ajustar el tamaño de los iconos */
+.control-btn i {
+    font-size: 15px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Separador visual entre los grupos de botones */
+.control-actions button:nth-child(3)::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    height: 20px;
+    width: 1px;
+    background-color: #e0e0e0;
+}
+
+
+/* --------------------------------------------- */
+
+/* Estilos para elementos seleccionados */
+.card-item.selected {
+    background-color: #e8f0fe;
+    border-color: #4285f4;
+    box-shadow: 0 0 0 1px #4285f4;
+    position: relative;
+}
+
+.card-item.selected::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 20px;
+    height: 20px;
+    background-color: #4285f4;
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='9' viewBox='0 0 12 9'%3E%3Cpath fill='%23fff' d='M4.1,6.1L2.4,4.4L1,5.9l3.1,3.1l6.6-6.6l-1.4-1.4L4.1,6.1z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 1;
+}

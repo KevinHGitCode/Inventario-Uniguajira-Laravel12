@@ -1,0 +1,95 @@
+/** PALETA DE COLORES
+
+--color-tradewind-100: #d2f5f2;
+--color-tradewind-200: #a5eae6;
+--color-tradewind-300: #70d8d5;
+--color-tradewind-400: #43bebe;
+--color-tradewind-500: #2db0b2;
+--color-tradewind-600: #1e7f83;
+--color-tradewind-700: #1c6569;
+
+--color-sea-buckthorn-100: #fbe9ca;
+--color-sea-buckthorn-200: #f7d390;
+--color-sea-buckthorn-300: #f3b656;
+--color-sea-buckthorn-400: #f1a036;
+--color-sea-buckthorn-500: #ea7a16;
+--color-sea-buckthorn-600: #cf5910;
+
+--color-terracotta-100: #fce7e4;
+--color-terracotta-200: #fad3ce;
+--color-terracotta-300: #f6b4ab;
+--color-terracotta-400: #ee887b;
+--color-terracotta-500: #e2604f;
+--color-terracotta-600: #ce4634;
+--color-terracotta-700: #ad3728;
+*/
+
+:root {
+    --text-title-color: #1a1a1ab0; /* Negro más suave que #0c0f0a */
+    --text-body-color: #4a4a4a; /* Gris oscuro para mejor legibilidad */
+    --white: #fdfefe;
+}
+
+/* Tipografía mejorada */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Estructura base */
+body {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--white);
+    color: var(--text-body-color);
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-width: 375px; /* Garantiza un ancho mínimo para el body */
+    overflow-x: hidden; /* Previene scroll horizontal en caso de contenido muy ancho */
+}
+
+/* Jerarquía tipográfica */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-title-color);
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    letter-spacing: -0.5px;
+}
+
+h2 {
+    font-size: 25px;
+    letter-spacing: -0.25px;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+h4 {
+    font-size: 1.25rem;
+}
+
+
+
+.me-2 {
+    margin-right: 0.5rem;
+}
+
+.hidden{
+    display: none;
+}
+
+
+svg {
+    width: 1rem;
+    height: 1rem;
+}

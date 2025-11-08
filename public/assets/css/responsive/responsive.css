@@ -1,0 +1,33 @@
+/* Responsive */
+@media (width <=500px){
+    .right .icons-header{
+        display: none;
+    }
+
+    .sidebar{
+        width: 0;
+    }
+
+    main{
+        margin-left: 0;
+        width: 100vw;
+    }
+
+    main.menu-toggle{
+        margin-left: 0;
+    }
+
+    .menu.menu-toggle div:first-child{
+        width: 100%;
+        transform: rotate(-45deg) translate(-0.2rem,0.3rem);
+    }
+
+    .menu.menu-toggle div:nth-child(2){
+        opacity: 0;
+    }
+
+    .menu.menu-toggle div:last-child{
+        width: 100%;
+        transform: rotate(45deg) translate(-0.2rem,-0.3rem);
+    }
+}

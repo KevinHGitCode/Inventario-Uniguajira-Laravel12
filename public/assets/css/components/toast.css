@@ -1,0 +1,101 @@
+/* Contenedor de toasts */
+#toastContainer {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    z-index: 1050;
+}
+
+/* Estilos base del toast */
+.toast {
+    width: 350px;
+    max-width: 100%;
+    font-size: 0.875rem;
+    pointer-events: auto;
+    background-color: rgba(255, 255, 255, 0.85);
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Variantes del toast */
+.toast-success {
+    border-left: 6px solid #198754; /* Verde para éxito */
+}
+
+.toast-fail {
+    border-left: 6px solid #dc3545; /* Rojo para fallo */
+}
+
+/* Contenido del toast */
+.toast-body {
+    padding: 0.75rem;
+    word-wrap: break-word;
+}
+
+/* Flexbox para alinear elementos */
+.d-flex {
+    display: flex !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+/* Botón de cierre */
+.btn-close {
+    box-sizing: content-box;
+    width: 1em;
+    height: 1em;
+    padding: 0.25em 0.25em;
+    color: #000;
+    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+    border: 0;
+    border-radius: 0.25rem;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.btn-close:hover {
+    color: #000;
+    text-decoration: none;
+    opacity: 0.75;
+}
+
+/* Clases de espaciado para el botón de cierre */
+.me-2 {
+    margin-right: 0.5rem !important;
+}
+
+.m-auto {
+    margin: auto !important;
+}
+
+/* Transiciones para mostrar/ocultar */
+.toast.showing {
+    opacity: 0;
+}
+
+.toast.show {
+    display: block;
+    opacity: 1;
+}
+
+.toast.hide {
+    display: none;
+}
+
+/* Responsive para móviles */
+@media (max-width: 576px) {
+    #toastContainer {
+        right: 0.5rem;
+        left: 0.5rem;
+        width: auto;
+    }
+    
+    .toast {
+        width: 100%;
+    }
+}
