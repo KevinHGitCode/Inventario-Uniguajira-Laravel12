@@ -1,58 +1,79 @@
+// Inicializar formularios de tareas
 function initFormsTask() {
-    // Para crear tareas
+    // Crear tarea
     inicializarFormularioAjax('#taskForm', {
-        onBefore: (form, config) => {
-            const taskName = document.getElementById('taskName').value.trim();
-            if (!taskName) {
+        onBefore: (form) => {
+            const name = form.querySelector('#taskName').value.trim();
+            if (!name) {
                 showNotification('El nombre de la tarea es requerido', 'error');
-                return false; // Cancelar envío
+                return false;
             }
         },
         closeModalOnSuccess: true,
         resetOnSuccess: true,
         onSuccess: (data) => {
-            loadContent('/home');
-            showNotification('Tarea creada exitosamente', 'success');
+            if (data.success) {
+                refreshTasks();
+                showNotification('Tarea creada exitosamente', 'success');
+            }
         }
     });
 
-    // Para actualizar tareas
+    // Editar tarea
     inicializarFormularioAjax('#editTaskForm', {
         contentType: 'application/json',
-        customBody: (form) => {
-            return {
-                id: document.getElementById('editTaskId').value,
-                name: document.getElementById('editTaskName').value,
-                description: document.getElementById('editTaskDesc').value,
-                date: document.getElementById('editTaskDate').value
-            };
-        },
+        customBody: (form) => ({
+            id: form.querySelector('#editTaskId').value,
+            name: form.querySelector('#editTaskName').value,
+            description: form.querySelector('#editTaskDesc').value,
+            date: form.querySelector('#editTaskDate').value
+        }),
         closeModalOnSuccess: true,
         onSuccess: (data) => {
-            loadContent('/home');
-            showNotification('Tarea actualizada exitosamente', 'success');
+            if (data.success) {
+                refreshTasks();
+                showNotification('Tarea actualizada exitosamente', 'success');
+            }
         }
     });
 }
 
+// Cargar datos actuales de tareas sin recargar la página
+async function refreshTasks() {
+    try {
+        const response = await fetch(window.location.pathname, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+        if (!response.ok) throw new Error('Error al refrescar las tareas');
+        const html = await response.text();
+        const main = document.getElementById('main-content');
+        main.innerHTML = html;
+        initFormsTask(); // reactivar formularios después de refrescar
+    } catch (error) {
+        console.error(error);
+        showNotification('No se pudo actualizar la vista', 'error');
+    }
+}
+
+// Abrir modal de edición con datos precargados
 function btnEditTask(id, name, description, date) {
     document.getElementById('editTaskId').value = id;
     document.getElementById('editTaskName').value = decodeURIComponent(name);
     document.getElementById('editTaskDesc').value = decodeURIComponent(description);
-    // Convert date to YYYY-MM-DD format for input type="date"
-    const formattedDate = new Date(date).toISOString().split('T')[0];
-    console.log(formattedDate)
-    document.getElementById('editTaskDate').value = formattedDate;
-    
+    document.getElementById('editTaskDate').value = new Date(date).toISOString().split('T')[0];
     mostrarModal('#editTaskModal');
 }
 
+// Alternar estado (pendiente ↔ completada)
 function toggleTask(taskId, button) {
+    const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
     fetch('/api/tasks/toggle', {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': token, // 👈 aquí el token
         },
         body: JSON.stringify({ id: taskId })
     })
@@ -74,77 +95,77 @@ function toggleTask(taskId, button) {
     });
 }
 
+
+// Eliminar tarea
 function deleteTask(taskId) {
     eliminarRegistro({
         url: `/api/tasks/delete/${taskId}`,
         onSuccess: (response) => {
-            if (response.success) 
-                loadContent('/home', false);
-            showToast(response);
+            if (response.success) {
+                refreshTasks();
+                showNotification('Tarea eliminada correctamente', 'success');
+            }
         }
     });
 }
 
+// ---------------------- UTILIDADES VISUALES ---------------------- //
+
 function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => notification.remove(), 3000);
+    const n = document.createElement('div');
+    n.className = `notification ${type}`;
+    n.textContent = message;
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 3000);
 }
 
 function createEmptyMessage(type = 'pending') {
-    const container = document.createElement('div');
-    container.className = 'no-tasks-message';
-    
+    const div = document.createElement('div');
+    div.className = 'no-tasks-message';
     const icon = document.createElement('i');
-    icon.className = type === 'pending' ? 
-        'fas fa-clipboard-list fa-3x' : 
-        'fas fa-folder-open fa-3x';
+    icon.className = type === 'pending' ? 'fas fa-clipboard-list fa-3x' : 'fas fa-folder-open fa-3x';
     icon.style.opacity = '0.6';
     icon.style.color = '#888';
-    
     const text = document.createElement('p');
-    text.textContent = type === 'pending' ? 
-        'No tienes tareas pendientes.' : 
-        'No tienes tareas completadas.';
-    
-    container.appendChild(icon);
-    container.appendChild(text);
-    return container;
+    text.textContent = type === 'pending'
+        ? 'No tienes tareas pendientes.'
+        : 'No tienes tareas completadas.';
+    div.append(icon, text);
+    return div;
 }
 
-function moveTaskToProperSection(taskCard) {
-    const isCompleted = taskCard.classList.contains('completed');
-    const pendingContainer = document.querySelector('.tasks-flex:not(.completed-tasks)');
-    const completedContainer = document.querySelector('.completed-tasks');
+// Mover tarjetas entre secciones
+function moveTaskToProperSection(card) {
+    const isCompleted = card.classList.contains('completed');
+    const pending = document.querySelector('.tasks-flex:not(.completed-tasks)');
+    const completed = document.querySelector('.completed-tasks');
 
-    // Remove existing empty state messages if they exist
-    ['pending', 'completed'].forEach(type => {
-        const container = type === 'pending' ? pendingContainer : completedContainer;
-        const message = container.querySelector('.no-tasks-message');
-        if (message) message.remove();
+    ['pending', 'completed'].forEach(t => {
+        const container = t === 'pending' ? pending : completed;
+        const msg = container.querySelector('.no-tasks-message');
+        if (msg) msg.remove();
     });
 
-    // Move the task to the appropriate container
-    const targetContainer = isCompleted ? completedContainer : pendingContainer;
-    const sourceContainer = isCompleted ? pendingContainer : completedContainer;
-    targetContainer.appendChild(taskCard);
+    const target = isCompleted ? completed : pending;
+    const source = isCompleted ? pending : completed;
+    target.appendChild(card);
 
-    // Check and update empty states
-    if (sourceContainer.children.length === 0) {
-        sourceContainer.appendChild(
-            createEmptyMessage(isCompleted ? 'pending' : 'completed')
-        );
+    if (source.children.length === 0) {
+        source.appendChild(createEmptyMessage(isCompleted ? 'pending' : 'completed'));
     }
 }
 
+// Colapsar tareas completadas
 function toggleCompletedTasks() {
-    const completedTasksSection = document.querySelector('.completed-tasks');
+    const section = document.querySelector('.completed-tasks');
     const arrow = document.getElementById('completedTasksArrow');
-    if (completedTasksSection && arrow) {
-        completedTasksSection.classList.toggle('collapsed');
+    if (section && arrow) {
+        section.classList.toggle('collapsed');
         arrow.classList.toggle('rotated');
     }
 }
+
+// Inicializar al cargar la vista
+document.addEventListener('DOMContentLoaded', () => {
+    initFormsTask();
+});

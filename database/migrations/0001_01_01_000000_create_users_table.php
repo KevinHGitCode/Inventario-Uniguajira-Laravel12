@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('role', ['admin', 'consultant'])->default('consultant');
+            $table->enum('role', ['administrador', 'consultor'])->default('consultor');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->string('profile_photo_path')->nullable();

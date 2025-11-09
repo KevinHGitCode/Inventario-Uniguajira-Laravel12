@@ -1,7 +1,7 @@
 /**
  * Manejador simplificado para operaciones de eliminación mediante AJAX
  * Esta función permite realizar eliminaciones con confirmación y acciones personalizadas
- * 
+ *
  * @param {Object} options - Opciones de configuración
  * @param {string} options.url - URL para la petición de eliminación (obligatorio)
  * @param {boolean} options.showConfirm - Mostrar diálogo de confirmación antes de eliminar (default: true)
@@ -21,17 +21,27 @@ function eliminarRegistro(options) {
         ...options
     };
 
-    // Validación de la URL
     if (!config.url) {
         throw new Error('La URL de eliminación es obligatoria');
     }
 
+    // ✅ Obtiene el token CSRF del meta tag
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
     // Función para realizar la petición
     const realizarPeticion = () => {
         fetch(config.url, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': token // 🔥 Esto resuelve el error 419
+            }
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+            return res.json();
+        })
         .then(response => {
             if (response.success) {
                 config.onSuccess(response);
@@ -40,11 +50,12 @@ function eliminarRegistro(options) {
             }
         })
         .catch(error => {
+            console.error('Error en eliminarRegistro:', error);
             config.onError(error);
         });
     };
 
-    // Si se requiere confirmación, mostrar diálogo
+    // Confirmación antes de eliminar
     if (config.showConfirm) {
         Swal.fire({
             title: config.confirmTitle,
@@ -61,7 +72,6 @@ function eliminarRegistro(options) {
             }
         });
     } else {
-        // Si no se requiere confirmación, realizar la petición directamente
         realizarPeticion();
     }
 }

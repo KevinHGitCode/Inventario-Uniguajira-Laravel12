@@ -29,7 +29,7 @@
                 </a>
             </li>
 
-            @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'administrador')
                 <li>
                     <a id="users" href="{{ route('users.index') }}" data-nav>
                         <img src="{{ asset('assets/icons/usuarios.svg') }}" alt="">

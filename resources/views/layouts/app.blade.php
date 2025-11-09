@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Inventario Uniguajira')</title>
     <link rel="icon" href="{{ asset('assets/images/favicon-uniguajira-32x32.webp') }}" type="image/png">
 

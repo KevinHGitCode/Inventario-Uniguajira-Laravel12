@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Task;
 
 class HomeController extends Controller
 {
@@ -11,13 +12,20 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-            if ($request->ajax()) {
-                // si es una carga AJAX, solo renderiza el contenido interno
-                return view('home.index')->renderSections()['content'];
-            }
+        // Simulamos la obtención de tareas como lo hacía PHP clásico
+        $dataTasks = [
+            'pendientes' => Task::where('status', 'pending')->get(),
+            'completadas' => Task::where('status', 'completed')->get(),
+        ];
 
-            // si es carga normal (primera vez), usa el layout completo
-            return view('home.index');
+        // si es una carga AJAX, solo renderiza el contenido interno
+        if ($request->ajax()) {
+            $view = view('home.index', compact('dataTasks'))->renderSections();
+            return $view['content'] ?? $view;
+        }
+
+        // si es carga normal (primera vez), usa el layout completo
+        return view('home.index', compact('dataTasks'));
     }
 
     /**

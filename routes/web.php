@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 // use Livewire\Volt\Volt;
 use App\Http\Controllers\{
     HomeController,
+    TaskController,
     GoodsController,
     InventoryController,
     ReportController,
@@ -35,6 +36,14 @@ Route::middleware('auth')->group(function () {
     Route::get('records', [RecordController::class, 'index'])->name('records.index');
 });
 
+
+// API para las tareas
+Route::prefix('api/tasks')->middleware('auth')->group(function () {
+    Route::patch('toggle', [TaskController::class, 'toggle']);
+    Route::delete('delete/{id}', [TaskController::class, 'destroy']);
+    Route::post('store', [TaskController::class, 'store']);
+    Route::put('update', [TaskController::class, 'update']);
+});
 
 // Route::middleware(['auth'])->group(function () {
 //     Route::redirect('settings', 'settings/profile');
