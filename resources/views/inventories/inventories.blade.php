@@ -12,7 +12,7 @@
 
     {{-- Título + botón volver --}}
     <div class="back-and-title">
-        <span id="group-name" class="location">{{ $group->name }}</span>
+        <span id="group-name" class="location" data-id="{{ $group->id }}">{{ $group->name }}</span>
 
         <button class="btn-back" onclick="volverAGroupIndex()">
             <i class="fas fa-arrow-left me-2"></i>
@@ -109,4 +109,12 @@
     </div>
 
 </div>
+
+
+{{-- MODALES --}}
+<x-modal.inventory mode="create" />
+<x-modal.inventory mode="rename" />
+{{-- // TODO: eliminar --}}
+{{-- <x-modal.inventory mode="responsable" /> --}}
+
 @endsection

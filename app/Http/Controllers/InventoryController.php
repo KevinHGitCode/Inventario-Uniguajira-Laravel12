@@ -5,32 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Group;
 use App\Models\Inventory;
-use App\Models\Asset;
-use App\Models\AssetEquipment;
 use Illuminate\Support\Facades\DB;
 
 class InventoryController extends Controller
 {
 
     // ------------------------------
-    // 1. Mostrar TODOS LOS GRUPOS
-    // ------------------------------
-    public function groupIndex(Request $request)
-    {
-        $groups = Group::withCount('inventories')->get();
-
-        if ($request->ajax()) {
-            return view('inventories.groups', compact('groups'))
-                ->renderSections()['content'];
-        }
-
-        return view('inventories.groups', compact('groups'));
-    }
-
-    // ------------------------------
     // 2. Inventarios de un grupo
     // ------------------------------
-    public function inventoryIndex(Request $request, $groupId)
+    public function index(Request $request, $groupId)
     {
         $group = Group::findOrFail($groupId);
 
@@ -126,19 +109,6 @@ class InventoryController extends Controller
     }
 
 
-    // ------------------------------
-    // 5. Página principal Inventarios
-    // ------------------------------
-    public function index(Request $request)
-    {
-        if ($request->ajax()) {
-            return view('inventories.index')->renderSections()['content'];
-        }
-
-        return view('inventories.index');
-    }
-
-
     public function updateEstado(Request $request)
     {
         $request->validate([
@@ -156,6 +126,127 @@ class InventoryController extends Controller
             'success' => true,
             'message' => 'Estado del inventario actualizado exitosamente.'
         ]);
+    }
+
+
+    // ------------------------------
+    // Crear Inventario (API)
+    // ------------------------------
+    public function create(Request $request)
+    {
+        $request->validate([
+            'grupo_id' => 'required|integer|exists:groups,id',
+            'nombre' => 'required|string|max:255',
+        ]);
+
+        $groupId = $request->grupo_id;
+        $nombre = $request->nombre;
+
+        // Verificar existencia de inventario con mismo nombre en el grupo
+        if (Inventory::where('group_id', $groupId)->where('name', $nombre)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya existe un inventario con ese nombre en el grupo.'
+            ], 409);
+        }
+
+        $inventory = Inventory::create([
+            'group_id' => $groupId,
+            'name' => $nombre,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Inventario creado exitosamente.',
+            'id' => $inventory->id,
+            'data' => $inventory,
+        ]);
+    }
+
+
+    // ------------------------------
+    // Renombrar Inventario (API)
+    // ------------------------------
+    public function rename(Request $request)
+    {
+        $request->validate([
+            'inventory_id' => 'required|integer',
+            'nombre' => 'required|string|max:255',
+        ]);
+
+        $id = $request->inventory_id;
+        $newName = $request->nombre;
+
+        $inventory = Inventory::find($id);
+        if (!$inventory) {
+            return response()->json(['success' => false, 'message' => 'El inventario no existe.'], 404);
+        }
+
+        // Comprobar nombre duplicado dentro del mismo grupo
+        $exists = Inventory::where('group_id', $inventory->group_id)
+            ->where('name', $newName)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['success' => false, 'message' => 'Ya existe un inventario con ese nombre en el grupo.'], 400);
+        }
+
+        $inventory->name = $newName;
+        $saved = $inventory->save();
+
+        if (!$saved) {
+            return response()->json(['success' => false, 'message' => 'No se pudo actualizar el inventario.'], 400);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Inventario renombrado correctamente.', 'data' => $inventory]);
+    }
+
+
+    // ------------------------------
+    // Actualizar responsable (API)
+    // ------------------------------
+    public function updateResponsable(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:inventories,id',
+            'responsable' => 'nullable|string|max:255',
+        ]);
+
+        $inventory = Inventory::findOrFail($request->id);
+        $inventory->responsible = $request->responsable;
+        $inventory->save();
+
+        return response()->json(['success' => true, 'message' => 'Responsable actualizado correctamente.', 'data' => $inventory]);
+    }
+
+
+    // ------------------------------
+    // Eliminar Inventario (API)
+    // ------------------------------
+    public function delete($id)
+    {
+        if (empty($id)) {
+            return response()->json(['success' => false, 'message' => 'El ID del inventario es requerido.'], 400);
+        }
+
+        $inventory = Inventory::find($id);
+        if (!$inventory) {
+            return response()->json(['success' => false, 'message' => 'Inventario no encontrado.'], 404);
+        }
+
+        // Verificar si tiene bienes asociados
+        if ($inventory->assetInventories()->exists()) {
+            return response()->json(['success' => false, 'message' => 'El inventario tiene bienes asociados.']);
+        }
+
+        try {
+            $inventory->delete();
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Ocurrió un error al eliminar el inventario.'], 500);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Inventario eliminado exitosamente.']);
     }
 
 }

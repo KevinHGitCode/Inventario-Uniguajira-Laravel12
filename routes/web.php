@@ -1,12 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-// use Laravel\Fortify\Features;
-// use Livewire\Volt\Volt;
 use App\Http\Controllers\{
     HomeController,
     TaskController,
     GoodsController,
+    GroupController,
     InventoryController,
     ReportController,
     UserController,
@@ -37,9 +36,11 @@ Route::middleware('auth')->group(function () {
 });
 
 // routes for goods
-Route::post('/api/goods/create', [GoodsController::class, 'store'])->name('goods.store');
-Route::post('/api/goods/update', [GoodsController::class, 'update'])->name('goods.update');
-Route::delete('/api/goods/delete/{id}', [GoodsController::class, 'destroy'])->name('goods.destroy');
+Route::prefix('api/goods')->middleware('auth')->group(function () {
+    Route::post('create', [GoodsController::class, 'store'])->name('goods.store');
+    Route::post('update', [GoodsController::class, 'update'])->name('goods.update');
+    Route::delete('delete/{id}', [GoodsController::class, 'destroy'])->name('goods.destroy');
+});
 
 
 // API para las tareas
@@ -50,41 +51,48 @@ Route::prefix('api/tasks')->middleware('auth')->group(function () {
     Route::put('update', [TaskController::class, 'update'])->name('tasks.update');
 });
 
+// 1. Grupos
+Route::get('/inventory/groups', [GroupController::class, 'index'])
+    ->middleware('auth')
+    ->name('inventory.groups');
+
 // INVENTARIO (USANDO UN SOLO CONTROLADOR)
 Route::controller(InventoryController::class)->group(function () {
 
-    // 1. Grupos
-    Route::get('/inventory/groups', 'groupIndex')->name('inventory.groups');
-
     // 2. Inventarios por grupo
-    Route::get('/inventory/{group}/inventories', 'inventoryIndex')->name('inventory.inventories');
+    Route::get('/inventory/{group}/inventories', 'index')
+        ->middleware('auth')
+        ->name('inventory.inventories');
 
     // 3. Bienes por inventario
-    Route::get('/inventory/{inventory}/goods', 'goodsIndex')->name('inventory.goods');
+    Route::get('/inventory/{inventory}/goods', 'goodsIndex')
+        ->middleware('auth')
+        ->name('inventory.goods');
 
     // 4. Bienes seriales por bien en inventario
-    Route::get('/inventory/{inventoryId}/goods/{assetId}/serials', 'serialsIndex')->name('inventory.serials');
+    Route::get('/inventory/{inventoryId}/goods/{assetId}/serials', 'serialsIndex')
+        ->middleware('auth')
+        ->name('inventory.serials');
 
 });
 
 Route::post('/api/inventories/updateEstado', [InventoryController::class, 'updateEstado'])
     ->name('inventories.updateEstado');
 
-// Route::middleware(['auth'])->group(function () {
-//     Route::redirect('settings', 'settings/profile');
 
-//     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
-//     Volt::route('settings/password', 'settings.password')->name('user-password.edit');
-//     Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
+// API para inventarios (crear, renombrar, actualizar responsable, eliminar)
+Route::prefix('api/inventories')->middleware('auth')->group(function () {
+    Route::post('create', [InventoryController::class, 'create'])->name('inventories.create');
+    Route::post('rename', [InventoryController::class, 'rename'])->name('inventories.rename');
+    Route::post('updateResponsable', [InventoryController::class, 'updateResponsable'])->name('inventories.updateResponsable');
+    Route::delete('delete/{id}', [InventoryController::class, 'delete'])->name('inventories.delete');
+});
 
-//     Volt::route('settings/two-factor', 'settings.two-factor')
-//         ->middleware(
-//             when(
-//                 Features::canManageTwoFactorAuthentication()
-//                     && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-//                 ['password.confirm'],
-//                 [],
-//             ),
-//         )
-//         ->name('two-factor.show');
-// });
+
+// API para grupos (crear, renombrar, eliminar)
+Route::prefix('api/groups')->middleware('auth')->group(function () {
+    Route::post('create', [GroupController::class, 'store'])->name('groups.create');
+    Route::post('rename', [GroupController::class, 'update'])->name('groups.rename');
+    Route::delete('delete/{id}', [GroupController::class, 'destroy'])->name('groups.delete');
+});
+

@@ -109,4 +109,8 @@
     </div>
 </div>
 
+{{-- MODALES --}}
+<x-modal.group mode="create" />
+<x-modal.group mode="rename" />
+
 @endsection

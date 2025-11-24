@@ -6,8 +6,7 @@ function initInventoryFunctions() {
         resetOnSuccess: true,
         onSuccess: (response) => {
             showToast(response);
-
-            loadContent('/inventory', false);
+            refrescarVistaInventario();
         }
     });
 
@@ -16,10 +15,7 @@ function initInventoryFunctions() {
         closeModalOnSuccess: true,
         onSuccess: (response) => {
             showToast(response);
-
-            console.log("hola esto es un cambio")
-
-            loadContent('/inventory', false);
+            refrescarVistaInventario();
         }
     });
 
@@ -29,7 +25,7 @@ function initInventoryFunctions() {
         resetOnSuccess: true,
         onSuccess: (response) => {
             showToast(response);
-            loadContent('/inventory', false);
+            refrescarVistaInventario();
         }
     });
 
@@ -93,6 +89,45 @@ async function volverAGroupIndex() {
     }
 }
 
+function getInventoryIdFromURL() {
+    const match = document.querySelector('.location').getAttribute('data-id');
+    return match;
+}
+
+
+/**
+ * Refresca la vista actual de bienes del inventario SIN usar loadContent()
+ */
+async function refrescarVistaInventario() {
+    try {
+        const inventoryId = getInventoryIdFromURL();
+        if (!inventoryId) {
+            console.error("No se encontró el ID del inventario en la URL");
+            return;
+        }
+
+        const url = `/inventory/${inventoryId}/inventories`;
+
+        const response = await fetch(url, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+
+        if (!response.ok) throw new Error("Error al refrescar inventario");
+
+        const html = await response.text();
+        const parsed = new DOMParser().parseFromString(html, "text/html");
+
+        const nuevoContenido = parsed.querySelector(".content");
+        if (!nuevoContenido) throw new Error("No se encontró .content en la respuesta");
+
+        document.querySelector(".content").replaceWith(nuevoContenido);
+
+    } catch (error) {
+        console.error(error);
+        showToast({ message: "Error al refrescar el inventario", success: false });
+    }
+}
+
 
 // Función para abrir el modal de renombrar inventario
 function btnRenombrarInventario() {
@@ -113,11 +148,8 @@ function btnEliminarInventario() {
     eliminarRegistro({
         url: `/api/inventories/delete/${idInventario}`,
         onSuccess: (response) => {
-            if (response.success) {
-                const grupoId = localStorage.getItem('openGroup');
-                loadContent('/inventory', false);
-            }
             showToast(response);
+            refrescarVistaInventario();
         }
     });
 }

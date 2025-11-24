@@ -1,4 +1,8 @@
+let gruposInicializado = false;
+
 function initGroupFunctions() {
+    if (gruposInicializado) return;
+    gruposInicializado = true;
 
     // Inicializar formulario para crear grupo
     // ruta del form: /api/groups/create
@@ -7,7 +11,8 @@ function initGroupFunctions() {
         resetOnSuccess: true,
         onSuccess: (response) => {
             showToast(response);
-            loadContent('/inventory', false);
+            // Refrescar la vista de grupos de forma sencilla
+            refrescarVistaGrupos();
         }
     });
 
@@ -17,7 +22,8 @@ function initGroupFunctions() {
         closeModalOnSuccess: true,
         onSuccess: (response) => {
             showToast(response);
-            loadContent('/inventory', false);
+            // Refrescar la vista de grupos de forma sencilla
+            refrescarVistaGrupos();
         }
     });
 }
@@ -53,11 +59,37 @@ function btnEliminarGrupo() {
         url: `/api/groups/delete/${idGrupo}`,
         onSuccess: (response) => {
             if (response.success) {
-                loadContent('/inventory', false);
+                refrescarVistaGrupos();
             }
             showToast(response);
         }
     });
+}
+
+
+// ---------------------------------------------------------------------
+// REFRESCAR LA VISTA DE GRUPOS SIN RECARGAR TODA LA PÁGINA
+// ---------------------------------------------------------------------
+async function refrescarVistaGrupos() {
+    const response = await fetch('/inventory/groups', {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    const html = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    const nuevoContenido = doc.querySelector('.content');
+
+    if (nuevoContenido) {
+        const existente = document.querySelector('.content');
+        if (existente) existente.replaceWith(nuevoContenido);
+
+        // 🔥 REINICIALIZAR EVENTOS Y FORMULARIOS
+        // No reiniciamos la bandera: los modales permanecen fuera de `.content`,
+        // por eso `initGroupFunctions()` sólo debe haberse ejecutado una vez.
+        initGroupFunctions();
+    }
 }
 
 /**
@@ -83,6 +115,10 @@ async function abrirGrupo(groupId) {
 
         // Cambiar la URL sin recargar
         history.pushState({}, "", url);
+
+        // Guardar el grupo abierto en localStorage para que otros módulos (inventarios)
+        // puedan recargar la vista correcta.
+        try { localStorage.setItem('openGroup', String(groupId)); } catch (e) { /* noop */ }
 
         console.log("Inventarios cargados correctamente");
 
