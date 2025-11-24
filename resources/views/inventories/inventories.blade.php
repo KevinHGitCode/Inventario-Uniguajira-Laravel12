@@ -6,6 +6,10 @@
 @section('content')
 <div class="content">
 
+    <div class="inventory-header">
+        <h1>Inventario</h1>
+    </div>
+
     {{-- Título + botón volver --}}
     <div class="back-and-title">
         <span id="group-name" class="location">{{ $group->name }}</span>

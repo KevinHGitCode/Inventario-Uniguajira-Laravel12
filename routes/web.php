@@ -67,6 +67,9 @@ Route::controller(InventoryController::class)->group(function () {
 
 });
 
+Route::post('/api/inventories/updateEstado', [InventoryController::class, 'updateEstado'])
+    ->name('inventories.updateEstado');
+
 // Route::middleware(['auth'])->group(function () {
 //     Route::redirect('settings', 'settings/profile');
 

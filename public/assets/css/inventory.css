@@ -4,7 +4,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 0;
     flex-wrap: wrap;
     gap: 16px;
 }
@@ -112,12 +112,12 @@
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .inventory-controls {
         width: 100%;
         margin-top: 12px;
     }
-    
+
     .status-control {
         width: 100%;
         justify-content: space-between;

@@ -5,6 +5,10 @@
 @section('content')
 <div class="content">
 
+    <div class="inventory-header">
+        <h1>Inventario</h1>
+    </div>
+
     <div id="groups">
         <h2 class="location">Grupos</h2>
 

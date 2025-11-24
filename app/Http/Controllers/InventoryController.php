@@ -139,51 +139,23 @@ class InventoryController extends Controller
     }
 
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function updateEstado(Request $request)
     {
-        //
+        $request->validate([
+            'id_inventario' => 'required|integer|exists:inventories,id',
+            'estado' => 'required|integer|in:1,2,3'
+        ]);
+
+        $inventory = Inventory::findOrFail($request->id_inventario);
+
+        $inventory->conservation_status = $request->estado; // bueno=1, regular=2, malo=3
+        $inventory->updated_at = now();
+        $inventory->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Estado del inventario actualizado exitosamente.'
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }
