@@ -1,15 +1,9 @@
-@props(['mode' => 'create'])
+@props(['mode' => 'create', 'group_id' => null])
 
 @php
     $isRename = $mode === 'rename';
-    $isResponsable = $mode === 'responsable';
 
-    if ($isResponsable) {
-        $modalId = 'modalEditarResponsable';
-        $formId = 'formEditarResponsable';
-        $title = 'Editar Responsable';
-        $route = url('/api/inventories/updateResponsable');
-    } elseif ($isRename) {
+    if ($isRename) {
         $modalId = 'modalRenombrarInventario';
         $formId = 'formRenombrarInventario';
         $title = 'Renombrar Inventario';
@@ -23,7 +17,7 @@
 @endphp
 
 <div id="{{ $modalId }}" class="modal">
-    <div class="modal-content {{ $isRename || $isResponsable ? 'modal-content-small' : 'modal-content-medium' }}">
+    <div class="modal-content {{ $isRename ? 'modal-content-small' : 'modal-content-medium' }}">
 
         <span class="close" onclick="ocultarModal('#{{ $modalId }}')">&times;</span>
 
@@ -37,8 +31,8 @@
         >
             @csrf
 
-            @if(!$isRename && !$isResponsable)
-                <input type="hidden" name="grupo_id" id="grupo_id_crear_inventario" required />
+            @if(!$isRename)
+                <input type="hidden" name="grupo_id" id="grupo_id_crear_inventario" value="{{ $group_id }}" required />
 
                 <div>
                     <label for="nombreInventario">Nombre del inventario:</label>
@@ -61,31 +55,9 @@
                     <button type="submit" class="btn submit-btn">Guardar Cambios</button>
                 </div>
 
-            @else
-                <input type="hidden" name="id" id="editarResponsableId" />
-
-                <div>
-                    <label for="editarResponsableNombre">Nuevo Responsable:</label>
-                    <input type="text" name="responsable" id="editarResponsableNombre" />
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn submit-btn">Guardar Cambios</button>
-                </div>
-
             @endif
 
         </form>
 
     </div>
 </div>
-
-@once
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof initInventoryFunctions === 'function') {
-                initInventoryFunctions();
-            }
-        });
-    </script>
-@endonce

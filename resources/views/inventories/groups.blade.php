@@ -117,6 +117,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             iniciarBusqueda('searchGroup');
+
+            if (typeof initGroupFunctions === 'function') {
+                initGroupFunctions();
+            }
         });
     </script>
 @endonce

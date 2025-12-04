@@ -33,7 +33,7 @@
         </div>
 
         @if(Auth::user()->role === 'administrador')
-            <button class="create-btn" onclick="mostrarModalCrearInventario()">
+            <button class="create-btn" onclick="mostrarModal('#modalCrearInventario')">
                 Crear
             </button>
         @endif
@@ -112,15 +112,18 @@
 
 
 {{-- MODALES --}}
-<x-modal.inventory mode="create" />
+<x-modal.inventory mode="create" group_id="{{ $group->id }}" />
 <x-modal.inventory mode="rename" />
-{{-- // TODO: eliminar --}}
-{{-- <x-modal.inventory mode="responsable" /> --}}
+
 
 @once
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             iniciarBusqueda('searchInventory');
+
+            if (typeof initInventoryFunctions === 'function') {
+                initInventoryFunctions();
+            }
         });
     </script>
 @endonce

@@ -53,10 +53,6 @@
 
 @once
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof initGroupFunctions === 'function') {
-                initGroupFunctions();
-            }
-        });
+//
     </script>
 @endonce

@@ -7,8 +7,9 @@ function initGoodsInventoryFunctions() {
         onSuccess: (response) => {
             showToast(response);
             const inventarioId = localStorage.getItem('openInventory');
-            // abrirInventario(inventarioId, false);
-            loadContent('/inventory', false);
+            if (inventarioId && typeof abrirInventario === 'function') {
+                abrirInventario(inventarioId);
+            }
         }
     });
 
@@ -20,7 +21,10 @@ function initGoodsInventoryFunctions() {
         resetOnSuccess: true,
         onSuccess: (response) => {
             showToast(response);
-            loadContent('/inventory', false);
+            const inventarioId = localStorage.getItem('openInventory');
+            if (inventarioId && typeof abrirInventario === 'function') {
+                abrirInventario(inventarioId);
+            }
         }
     });
 
@@ -30,7 +34,10 @@ function initGoodsInventoryFunctions() {
         resetOnSuccess: true,
         onSuccess: (response) => {
             showToast(response);
-            loadContent('/inventory', false);
+            const inventarioId = localStorage.getItem('openInventory');
+            if (inventarioId && typeof abrirInventario === 'function') {
+                abrirInventario(inventarioId);
+            }
         }
     });
 }
@@ -96,7 +103,10 @@ function btnEliminarBienCantidad() {
         url: `/api/goods-inventory/delete-quantity/${idInventario}/${idBien}`,
         onSuccess: (response) => {
             showToast(response);
-            loadContent('/inventory', false);
+            const idInventario = localStorage.getItem('openInventory');
+            if (idInventario && typeof abrirInventario === 'function') {
+                abrirInventario(idInventario);
+            }
         }
     });
 }
@@ -108,7 +118,10 @@ function btnEliminarBienSerial() {  //TODO: por serial
         url: `/api/goods-inventory/delete-serial/${idBienSerial}`,
         onSuccess: (response) => {
             showToast(response);
-            loadContent('/inventory', false);
+            const idInventario = localStorage.getItem('openInventory');
+            if (idInventario && typeof abrirInventario === 'function') {
+                abrirInventario(idInventario);
+            }
         }
     });
 }

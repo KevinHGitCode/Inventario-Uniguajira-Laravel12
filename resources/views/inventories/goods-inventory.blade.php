@@ -83,6 +83,40 @@
         @endif
     </div>
 
+    @if(Auth::user()->role === 'administrador')
+    {{-- Barra de control para bienes --}}
+    <div id="control-bar-good" class="control-bar">
+        <div class="selected-name">1 seleccionado</div>
+
+        <div class="control-actions">
+
+            {{-- Cambiar cantidad --}}
+            <button class="control-btn"
+                    title="Cambiar cantidad"
+                    onclick="btnEditarBienCantidad()">
+                <i class="fas fa-sort-numeric-up"></i>
+            </button>
+
+            {{-- (Pendiente implementación futura)
+            <button class="control-btn"
+                    title="Mover"
+                    onclick="btnMoverBien()">
+                <i class="fas fa-exchange-alt"></i>
+            </button>
+            --}}
+
+            {{-- Eliminar --}}
+            <button class="control-btn"
+                    title="Eliminar"
+                    onclick="btnEliminarBienCantidad()">
+                <i class="fas fa-trash"></i>
+            </button>
+
+        </div>
+    </div>
+    @endif
+
+
     @if($assets->isEmpty())
         <div class="empty-state">
             <i class="fas fa-box-open fa-3x"></i>
@@ -92,9 +126,13 @@
         <div class="bienes-grid">
             @foreach($assets as $asset)
                 <div class="bien-card card-item"
-                    data-id="{{ $asset->asset_id }}"
-                    data-name="{{ $asset->asset }}"
-                    data-type="{{ $asset->type }}"
+                    @if (Auth::user()->role === 'administrador')
+                        data-id="{{ $asset->asset_id }}"
+                        data-name="{{ $asset->asset }}"
+                        data-cantidad="{{ $asset->quantity }}"
+                        data-type="good"
+                        onclick="toggleSelectItem(this)"
+                    @endif
                 >
 
                     {{-- Imagen --}}
@@ -142,6 +180,11 @@
     </script>
 @endonce
 
+{{-- MODALES: responsable (separate component) --}}
+<x-modal.good-inventory-create />
+<x-modal.good-inventory-edit-serial />
+<x-modal.good-inventory-edit-quantity />
+<x-modal.inventory-responsible />
 
 
 @endsection

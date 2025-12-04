@@ -28,18 +28,6 @@ function initGroupFunctions() {
     });
 }
 
-function mostrarModalCrearInventario() {
-    // Obtener el ID del grupo actual del localStorage
-    const currentGroupId = localStorage.getItem('openGroup');
-
-    // Establecer el valor en el campo oculto
-    if (currentGroupId) {
-        document.getElementById('grupo_id_crear_inventario').value = currentGroupId;
-    }
-
-    // Mostrar el modal
-    mostrarModal('#modalCrearInventario');
-}
 
 function btnRenombrarGrupo() {
     console.log(selectedItem); // mensaje de depuración

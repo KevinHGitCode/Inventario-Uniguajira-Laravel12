@@ -16,6 +16,24 @@
         </button>
     </div>
 
+    {{-- buscador --}}
+
+
+
+    {{-- barra de control --}}
+
+            <div id="control-bar-serial-good" class="control-bar">
+                <div class="selected-name">1 seleccionado</div>
+                <div class="control-actions">
+                    <button class="control-btn" title="Editar" onclick="btnEditarBienSerial()">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="control-btn" title="Eliminar" onclick="btnEliminarBienSerial()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
     @if($serials->isEmpty())
         <div class="empty-state">
             <i class="fas fa-box-open fa-3x"></i>
@@ -37,6 +55,8 @@
                     data-color="{{ $serial->color }}"
                     data-condition="{{ $serial->technical_conditions }}"
                     data-entry-date="{{ $serial->entry_date }}"
+                    data-type="serial"
+                    onclick="toggleSelectItem(this)"
                 >
                     <img
                         src="{{ asset('storage/' . $serial->image ?? 'assets/uploads/img/goods/default.jpg') }}"
