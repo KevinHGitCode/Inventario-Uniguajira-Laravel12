@@ -152,7 +152,7 @@ class GoodsController extends Controller
     /**
      * Batch create goods from Excel upload
      * POST /api/goods/batchCreate
-     * 
+     *
      * Recibe un array de bienes con sus datos e imágenes opcionales
      * Formato esperado:
      * - goods[0][nombre]: nombre del bien
@@ -162,17 +162,18 @@ class GoodsController extends Controller
     public function batchCreate(Request $request)
     {
         try {
+            dd($request->all());
             // Obtener todos los datos del request
             $allData = $request->all();
-            
+
             // Obtener los bienes del request (puede venir como array anidado)
             $goods = $request->input('goods', []);
-            
+
             // Si goods está vacío, intentar obtenerlo de otra forma
             if (empty($goods) && isset($allData['goods'])) {
                 $goods = $allData['goods'];
             }
-            
+
             if (empty($goods) || !is_array($goods)) {
                 return response()->json([
                     'success' => false,
@@ -196,7 +197,7 @@ class GoodsController extends Controller
                     // Validar datos básicos
                     $nombre = isset($good['nombre']) ? trim($good['nombre']) : '';
                     $tipo = isset($good['tipo']) ? $good['tipo'] : null;
-                    
+
                     if (empty($nombre) || $tipo === null) {
                         $errors[] = "Fila {$index}: Faltan datos requeridos (nombre o tipo)";
                         continue;
@@ -219,10 +220,10 @@ class GoodsController extends Controller
                     // Procesar imagen si existe
                     $imagePath = null;
                     $imageKey = "goods_{$index}_imagen";
-                    
+
                     if ($request->hasFile($imageKey)) {
                         $image = $request->file($imageKey);
-                        
+
                         // Validar que sea una imagen
                         if ($image->isValid()) {
                             // Validar tamaño (2 MB)
@@ -286,7 +287,7 @@ class GoodsController extends Controller
     /**
      * Download Excel template for goods import
      * GET /api/goods/download-template
-     * 
+     *
      * Genera una plantilla Excel con las columnas: Bien y Tipo
      * El tipo puede ser "Cantidad" o "Serial"
      */
@@ -325,10 +326,27 @@ class GoodsController extends Controller
 </Workbook>';
 
         $filename = 'plantilla_bienes.xls';
-        
+
         return response($xml, 200)
             ->header('Content-Type', 'application/vnd.ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Cache-Control', 'max-age=0');
+    }
+
+    /**
+     * Show the view for uploading goods via Excel
+     * GET /api/goods/excel-upload/view
+     *
+     * Muestra la vista para la subida de bienes por medio de un archivo Excel
+     */
+    public function excelUploadView(Request $request)
+    {
+        if ($request->ajax()) {
+            // si es una carga AJAX, solo renderiza el contenido interno
+            return view('goods.excel-upload')
+                ->renderSections()['content'];
+        }
+
+        return view('goods.excel-upload');
     }
 }

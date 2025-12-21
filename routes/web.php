@@ -47,6 +47,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/group/{groupId}/inventory/{inventoryId}', [GoodsInventoryController::class, 'goodsIndex'])->name('inventory.goods');
 
+    // Ruta para la vista de subida de Excel
+    Route::get('/goods/excel-upload', [GoodsController::class, 'excelUploadView'])->name('goods.excel-upload');
 });
 
 // API routes

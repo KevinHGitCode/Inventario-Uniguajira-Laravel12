@@ -6,10 +6,11 @@
 <div class="content">
 
     <div class="goods-header">
-        <h2>Lista de bienes</h2>
+        <h2>Catalogo de bienes</h2>
 
         {{-- Botón subir Excel --}}
-        <label class="excel-upload-btn" title="Subir Excel" onclick="toggleExcelUploadUI()">
+        <label class="excel-upload-btn" title="Subir Excel"
+            onclick="loadContent( '{{ route('goods.excel-upload') }}' )">
             <i class="fas fa-file-excel"></i>
         </label>
     </div>
@@ -67,7 +68,7 @@
                     @if(Auth::user()->role === 'administrador')
                         <div class="actions">
                             <a class="btn-editar"
-                                onclick="ActualizarBien({{ $bien->id }}, '{{ $bien->name }}')">
+                                onclick="btnEditarBien({{ $bien->id }}, '{{ $bien->name }}')">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <a class="btn-eliminar"
@@ -83,76 +84,17 @@
         </div>
     @endif
 
-
-    {{-- ------------------------- --}}
-    {{--  SECCIÓN PARA SUBIR EXCEL --}}
-    {{-- ------------------------- --}}
-    <div id="excel-upload-content" class="hidden">
-
-        <h3>Cargar datos de bienes desde Excel</h3>
-
-        <div style="margin-bottom: 20px;">
-            <a href="{{ route('goods.download-template') }}" 
-               class="btn" 
-               style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; margin-bottom: 10px;">
-                <i class="fas fa-download"></i> Descargar plantilla Excel
-            </a>
-        </div>
-
-        <div id="excel-upload-area"
-            class="excel-upload-area"
-            style="border: 2px dashed #ccc; padding: 20px; text-align: center;"
-        >
-            <p>Arrastra y suelta un archivo aquí o haz clic para seleccionar un archivo</p>
-
-            <input
-                type="file"
-                id="excelFileInput"
-                accept=".xlsx, .xls, .csv"
-                class="hidden"
-                onchange="handleFileUpload(event)"
-            />
-
-            <button id="btn-select-excel" class="select-btn"
-                onclick="document.getElementById('excelFileInput').click()">
-                Seleccionar archivo
-            </button>
-        </div>
-
-        <br>
-
-        <h3>Previsualización de datos</h3>
-        <div id="excel-preview-table">
-            <table class="hidden">
-                <thead>
-                    <tr>
-                        <th>Bien</th>
-                        <th>Tipo</th>
-                        <th>Imagen</th>
-                    </tr>
-                </thead>
-                <tbody id="excel-preview-body">
-                </tbody>
-            </table>
-        </div>
-
-        <button onclick="btnClearExcelUploadUI()" class="btn">Cancelar</button>
-        <button id="btnEnviarExcel" class="btn create-btn"
-            onclick="sendGoodsData(collectGoodsData())"
-            disabled>
-            Enviar
-        </button>
-
-    </div>
-
     {{-- MODALES --}}
     <x-modal.good mode="create" />
     <x-modal.good mode="edit" />
-    
+
+    {{-- 🔽 Agregamos este bloque --}}
     @once
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                iniciarBusqueda('searchGood');
+                if (typeof initFormsBien === 'function') {
+                    initFormsBien();
+                }
             });
         </script>
     @endonce

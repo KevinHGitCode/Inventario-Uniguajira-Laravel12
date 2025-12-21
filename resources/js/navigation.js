@@ -40,9 +40,21 @@ window.loadContent = async (url, options = {}) => {
     }
 };
 
-window.initializeScripts = () => {
-    // Aquí puedes agregar la lógica para inicializar eventos o scripts necesarios
-    console.log("Scripts inicializados");
+window.initializeScripts = (url) => {
+    const path = url.split('/')[3];
+
+    const scriptMap = {
+        'home': 'initFormsTask',
+        'goods': 'initFormsBien',
+        'groups': 'initGroupFunctions'
+    };
+
+    const scriptName = scriptMap[path];
+    if (scriptName && typeof window[scriptName] === 'function') {
+        window[scriptName]();
+    }
+
+    console.log("Scripts inicializados", scriptName);
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -54,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const url = link.getAttribute("href");
 
             // Carga el contenido al hacer clic en un enlace
-            loadContent(url);
+            loadContent(url, { onSuccess: () => initializeScripts(url) });
 
             // Actualiza la URL sin recargar
             window.history.pushState({ url }, "", url);

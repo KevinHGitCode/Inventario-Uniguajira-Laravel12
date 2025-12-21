@@ -1,0 +1,70 @@
+/* Input de carga de imagen */
+.image-upload-input {
+    display: inline-block;
+    width: 100%;
+    max-width: 260px;
+
+    padding: 10px 12px;
+
+    font-size: 14px;
+    font-family: inherit;
+    color: #444;
+
+    background-color: #f9fafb;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 10px;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+/* Hover */
+.image-upload-input:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* Focus */
+.image-upload-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background-color: #ffffff;
+}
+
+/* Estado activo */
+.image-upload-input:active {
+    transform: scale(0.98);
+}
+
+/* Quitar estilos nativos del botón en algunos navegadores */
+.image-upload-input::-webkit-file-upload-button {
+    visibility: hidden;
+}
+
+/* Texto personalizado */
+.image-upload-input::before {
+    content: "Seleccionar imagen";
+    display: inline-block;
+
+    background: #e5e7eb;
+    color: #374151;
+
+    padding: 8px 14px;
+    border-radius: 8px;
+
+    font-weight: 500;
+    margin-right: 8px;
+
+    cursor: pointer;
+}
+
+/* Hover del pseudo botón */
+.image-upload-input:hover::before {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* Cuando ya hay archivo */
+.image-upload-input:valid::before {
+    content: "Cambiar imagen";
+}

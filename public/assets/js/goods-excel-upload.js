@@ -1,12 +1,3 @@
-function toggleExcelUploadUI() {
-    const excelUploadUI = document.getElementById('excel-upload-content');
-    const goodsContent = document.getElementById('bienes-grid');
-
-    // Toggle class hidden
-    excelUploadUI.classList.toggle('hidden');
-    goodsContent.classList.toggle('hidden');
-}
-
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -35,7 +26,7 @@ function loadDataFromExcel(file) {
     console.log('Iniciando carga del archivo Excel:', file.name);
 
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = async function(event) {
         console.log('Archivo leído correctamente, procesando datos...');
         const data = event.target.result;
         const workbook = XLSX.read(data, { type: 'binary' });
@@ -59,12 +50,7 @@ function loadDataFromExcel(file) {
         const tipoIndex = headers.findIndex(h => h.toLowerCase() === 'tipo');
         const imagenIndex = headers.findIndex(h => h.toLowerCase() === 'imagen');
 
-        // Obtener bienes existentes para validar duplicados
-        const existingGoods = window.globalAutocomplete.getItems().map(item => item.bien.toLowerCase());
-
-        // Refresh the list of existing goods before processing
-        window.globalAutocomplete.recargarDatos();
-        const updatedExistingGoods = window.globalAutocomplete.getItems().map(item => item.bien.toLowerCase());
+        const updatedExistingGoods = await fetchExistingGoods();
 
         // Limpiar tabla de previsualización
         const previewBody = document.getElementById('excel-preview-body');
@@ -159,7 +145,6 @@ function loadDataFromExcel(file) {
 }
 
 function btnClearExcelUploadUI() {
-    toggleExcelUploadUI();
 
     // Limpiar el input de archivo
     const excelFileInput = document.getElementById('excelFileInput');
@@ -180,7 +165,7 @@ function btnClearExcelUploadUI() {
 function sendGoodsData() {
     const rows = document.querySelectorAll('#excel-preview-body tr');
     const formData = new FormData();
-    
+
     console.log('Iniciando envío de datos. Filas encontradas:', rows.length);
 
     rows.forEach((row, index) => {
@@ -191,7 +176,7 @@ function sendGoodsData() {
         const imagen = imagenInput?.files[0];
 
         const tipoEnum = mapTipoToEnum(tipo);
-        
+
         console.log(`Procesando fila ${index}:`, {
             bien,
             tipo,
@@ -204,7 +189,7 @@ function sendGoodsData() {
             // Agregar datos del bien
             formData.append(`goods[${index}][nombre]`, bien);
             formData.append(`goods[${index}][tipo]`, tipoEnum);
-            
+
             // CORRECCIÓN PRINCIPAL: Usar la clave correcta para las imágenes
             if (imagen) {
                 // La clave debe coincidir con lo que espera el backend: goods_{index}_imagen
@@ -275,5 +260,22 @@ function updateEnviarButtonState() {
     const btn = document.getElementById('btnEnviarExcel');
     if (btn) {
         btn.disabled = collectGoodsData().length === 0;
+    }
+}
+
+async function fetchExistingGoods() {
+    try {
+        const response = await fetch('/api/goods/get/json');
+        if (!response.ok) {
+            throw new Error('Error al consultar la API de bienes');
+        }
+        const data = await response.json();
+        console.log('Datos obtenidos de la API:', data);
+        // Retornar los bienes existentes en minúsculas para evitar duplicados
+        return data.map(item => item.bien.toLowerCase());
+    } catch (error) {
+        console.error('Error al obtener los bienes de la API:', error);
+        showToast({ success: false, message: 'Error al obtener los bienes de la API: ' + error.message });
+        return [];
     }
 }

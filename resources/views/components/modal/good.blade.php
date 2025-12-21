@@ -75,14 +75,3 @@
 
     </div>
 </div>
-
-{{-- 🔽 Agregamos este bloque --}}
-@once
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof initFormsBien === 'function') {
-                initFormsBien();
-            }
-        });
-    </script>
-@endonce
