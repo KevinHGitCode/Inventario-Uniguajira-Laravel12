@@ -63,6 +63,19 @@
                     name="imagen"
                     id="{{ $isEdit ? 'actualizarImagenBien' : 'imagenBien' }}"
                     accept="image/*"
+                    class="
+                        block w-full text-sm text-white
+                        file:bg-[#6d7470]
+                        file:text-white
+                        file:border-0
+                        file:rounded-md
+                        file:px-3 file:py-1
+                        file:cursor-pointer
+                        file:mr-2
+                        file:text-base
+                        hover:file:bg-[#5f6663]
+                        focus:outline-none
+                    "
                 />
             </div>
 

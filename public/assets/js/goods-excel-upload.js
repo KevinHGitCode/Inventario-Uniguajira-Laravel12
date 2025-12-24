@@ -1,281 +1,355 @@
+// Configuración
+const CONFIG = {
+    validTypes: ['.xlsx', '.xls', '.csv'],
+    requiredHeaders: ['bien', 'tipo'],
+    optionalHeaders: ['imagen'],
+    tipoMap: { 'cantidad': 1, 'serial': 2 },
+    maxImageSize: 2 * 1024 * 1024, // 2MB por imagen
+    maxTotalSize: 8 * 1024 * 1024  // 8MB total (límite PHP por defecto)
+};
+
+// Manejo de carga de archivo
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Check file type
-    const validTypes = ['.xlsx', '.xls', '.csv'];
-    const fileType = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    if (!validTypes.includes(fileType)) {
-        alert('Por favor seleccione un archivo Excel válido (.xlsx, .xls, .csv)');
+    const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+    if (!CONFIG.validTypes.includes(fileExt)) {
+        alert('Formato inválido. Use: ' + CONFIG.validTypes.join(', '));
         return;
     }
 
-    // Process the file
     loadDataFromExcel(file);
 }
 
-/**
- * Loads and processes data from an Excel file
- * @param {File} file - The Excel file to be processed
- * @description This function reads an Excel file and converts it to JSON format.
- * The reader.readAsBinaryString(file) method reads the contents of the file as a binary string,
- * which is then used by the XLSX library to parse the Excel data.
- * Once loaded, it accesses the first sheet and converts it to a JSON array.
- */
-function loadDataFromExcel(file) {
-    console.log('Iniciando carga del archivo Excel:', file.name);
+// Cargar y procesar Excel
+async function loadDataFromExcel(file) {
+    try {
+        const data = await readExcelFile(file);
+        const parsedData = parseExcelData(data);
 
-    const reader = new FileReader();
-    reader.onload = async function(event) {
-        console.log('Archivo leído correctamente, procesando datos...');
-        const data = event.target.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const firstSheetName = workbook.SheetNames[0];
-        console.log('Primera hoja encontrada:', firstSheetName);
-
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        console.log('Datos convertidos a JSON:', jsonData);
-
-        // Verificar encabezados requeridos
-        const headers = jsonData[0];
-        console.log('Encabezados encontrados:', headers);
-        if (!headers || !headers.some(h => h.toLowerCase() === 'bien') || !headers.some(h => h.toLowerCase() === 'tipo')) {
-            console.error('Encabezados requeridos no encontrados. Se requiere "bien" y "tipo".');
-            alert('El archivo Excel debe contener los encabezados "bien" y "tipo" (no sensible a mayúsculas).');
+        if (!parsedData.length) {
+            showToast({ success: false, message: 'No hay datos válidos en el archivo.' });
             return;
         }
 
-        const bienIndex = headers.findIndex(h => h.toLowerCase() === 'bien');
-        const tipoIndex = headers.findIndex(h => h.toLowerCase() === 'tipo');
-        const imagenIndex = headers.findIndex(h => h.toLowerCase() === 'imagen');
+        const existingGoods = await fetchExistingGoods();
+        const filteredData = filterDuplicates(parsedData, existingGoods);
 
-        const updatedExistingGoods = await fetchExistingGoods();
-
-        // Limpiar tabla de previsualización
-        const previewBody = document.getElementById('excel-preview-body');
-        previewBody.innerHTML = '';
-        console.log('Tabla de previsualización limpiada.');
-
-        // Procesar filas de datos
-        jsonData.slice(1).forEach((row, index) => {
-            const bien = row[bienIndex]?.trim();
-            const tipo = row[tipoIndex]?.trim();
-            const imagen = row[imagenIndex]?.trim();
-
-            // Validar que el bien no sea N/A y no esté duplicado
-            if (!bien || bien.toLowerCase() === 'n/a') {
-                console.warn(`Fila ${index + 1} ignorada: bien inválido (${bien}).`);
-                return;
-            }
-
-            // Check for duplicates against existing goods
-            if (updatedExistingGoods.includes(bien.toLowerCase())) {
-                console.warn(`Fila ${index + 1} ignorada: bien duplicado (${bien}).`);
-                return;
-            }
-
-            console.log(`Procesando fila ${index + 1}:`, { bien, tipo, imagen });
-
-            // Crear fila de la tabla
-            const tr = document.createElement('tr');
-
-            // Columna "Bien"
-            const tdBien = document.createElement('td');
-            tdBien.textContent = bien;
-            tr.appendChild(tdBien);
-
-            // Columna "Tipo"
-            const tdTipo = document.createElement('td');
-            tdTipo.textContent = tipo || 'N/A';
-            tr.appendChild(tdTipo);
-
-            // Columna "Imagen" (espacio para subir)
-            const tdImagen = document.createElement('td');
-            const imgInput = document.createElement('input');
-            imgInput.type = 'file';
-            imgInput.accept = 'image/*';
-            imgInput.classList.add('image-upload-input');
-            // IMPORTANTE: Agregar data-index para identificar la imagen
-            imgInput.setAttribute('data-index', index);
-            tdImagen.appendChild(imgInput);
-            tr.appendChild(tdImagen);
-
-            // Add a trash icon to each row for deletion
-            const tdTrash = document.createElement('td');
-            const closeIcon = document.createElement('i');
-            closeIcon.classList.add('fas', 'fa-times', 'close-icon');
-            closeIcon.title = 'Eliminar fila';
-            closeIcon.onclick = function() {
-                tr.remove();
-                updateEnviarButtonState();
-            };
-            tdTrash.appendChild(closeIcon);
-            tr.appendChild(tdTrash);
-
-            // Agregar fila a la tabla
-            previewBody.appendChild(tr);
-            console.log('Fila agregada a la tabla:', tr);
-        });
-
-        // Mostrar tabla si tiene datos
-        const table = document.querySelector('#excel-preview-table table');
-        if (previewBody.children.length > 0) {
-            table.classList.remove('hidden');
-            console.log('Tabla de previsualización mostrada.');
-        } else {
-            table.classList.add('hidden');
-            console.warn('No se encontraron datos válidos para mostrar en la tabla.');
+        if (!filteredData.length) {
+            showToast({ success: false, message: 'Todos los bienes ya existen en el sistema.' });
+            return;
         }
 
-        // Show a toast if all rows are ignored
-        if (previewBody.children.length === 0) {
-            showToast({ success: false, message: 'Todos los datos del archivo Excel ya estan en el sistema.' });
-        }
+        renderPreviewTable(filteredData);
+        showToast({ success: true, message: `${filteredData.length} bien(es) listo(s) para enviar.` });
 
-        updateEnviarButtonState();
-    };
-
-    reader.onerror = function() {
-        showToast({ success: false, message: 'Ocurrió un error al leer el archivo. Intente nuevamente.' });
-    };
-
-    reader.readAsBinaryString(file);
-    showToast({ success: true, message: 'Lectura del archivo iniciada.' });
-}
-
-function btnClearExcelUploadUI() {
-
-    // Limpiar el input de archivo
-    const excelFileInput = document.getElementById('excelFileInput');
-    excelFileInput.value = '';
-
-    // Limpiar la tabla de previsualización
-    const previewBody = document.getElementById('excel-preview-body');
-    previewBody.innerHTML = '';
-
-    // Ocultar la tabla de previsualización
-    const table = document.querySelector('#excel-preview-table table');
-    table.classList.add('hidden');
-
-    updateEnviarButtonState();
-}
-
-// FUNCIÓN CORREGIDA - Ahora maneja correctamente las imágenes
-function sendGoodsData() {
-    const rows = document.querySelectorAll('#excel-preview-body tr');
-    const formData = new FormData();
-
-    console.log('Iniciando envío de datos. Filas encontradas:', rows.length);
-
-    rows.forEach((row, index) => {
-        const cells = row.querySelectorAll('td');
-        const bien = cells[0]?.textContent.trim();
-        const tipo = cells[1]?.textContent.trim();
-        const imagenInput = cells[2]?.querySelector('input[type="file"]');
-        const imagen = imagenInput?.files[0];
-
-        const tipoEnum = mapTipoToEnum(tipo);
-
-        console.log(`Procesando fila ${index}:`, {
-            bien,
-            tipo,
-            tipoEnum,
-            tieneImagen: !!imagen,
-            nombreImagen: imagen?.name
-        });
-
-        if (bien && tipoEnum) {
-            // Agregar datos del bien
-            formData.append(`goods[${index}][nombre]`, bien);
-            formData.append(`goods[${index}][tipo]`, tipoEnum);
-
-            // CORRECCIÓN PRINCIPAL: Usar la clave correcta para las imágenes
-            if (imagen) {
-                // La clave debe coincidir con lo que espera el backend: goods_{index}_imagen
-                formData.append(`goods_${index}_imagen`, imagen);
-                console.log(`Imagen agregada con clave: goods_${index}_imagen`);
-            }
-        }
-    });
-
-    // Debug: Mostrar todo el contenido del FormData
-    console.log('Contenido del FormData:');
-    for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + (pair[1] instanceof File ? `[File: ${pair[1].name}]` : pair[1]));
-    }
-
-    fetch('/api/goods/batchCreate', {
-        method: 'POST',
-        body: formData,
-    })
-        .then(response => {
-            console.log('Respuesta recibida, status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Datos de respuesta:', data);
-            showToast(data);
-            if (data.success) {
-                window.globalAutocomplete.recargarDatos();
-                loadContent('/goods');
-                btnClearExcelUploadUI();
-            }
-        })
-        .catch(error => {
-            console.error('Error en la petición:', error);
-            showToast({ success: false, message: 'Error de conexión: ' + error.message });
-        });
-}
-
-function mapTipoToEnum(tipo) {
-    if (!tipo) return null;
-    const tipoLower = tipo.toLowerCase();
-    if (tipoLower === 'cantidad') return 1;
-    if (tipoLower === 'serial') return 2;
-    return null; // Invalid type
-}
-
-function collectGoodsData() {
-    const rows = document.querySelectorAll('#excel-preview-body tr');
-    const goods = [];
-
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const bien = cells[0]?.textContent.trim();
-        const tipo = cells[1]?.textContent.trim();
-        const imagenInput = cells[2]?.querySelector('input[type="file"]');
-        const imagen = imagenInput?.files[0]?.name || null;
-
-        const tipoEnum = mapTipoToEnum(tipo);
-        if (bien && tipoEnum) {
-            goods.push({ nombre: bien, tipo: tipoEnum, imagen });
-        }
-    });
-
-    return goods;
-}
-
-function updateEnviarButtonState() {
-    const btn = document.getElementById('btnEnviarExcel');
-    if (btn) {
-        btn.disabled = collectGoodsData().length === 0;
+    } catch (error) {
+        console.error('Error al procesar Excel:', error);
+        showToast({ success: false, message: 'Error al procesar el archivo.' });
     }
 }
 
+// Leer archivo Excel
+function readExcelFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            try {
+                const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                resolve(jsonData);
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        reader.onerror = () => reject(new Error('Error al leer el archivo'));
+        reader.readAsBinaryString(file);
+    });
+}
+
+// Parsear datos del Excel
+function parseExcelData(jsonData) {
+    if (!jsonData.length) return [];
+
+    const headers = jsonData[0].map(h => h.toLowerCase().trim());
+
+    // Validar encabezados requeridos
+    const hasRequired = CONFIG.requiredHeaders.every(h => headers.includes(h));
+    if (!hasRequired) {
+        alert(`El archivo debe contener: ${CONFIG.requiredHeaders.join(', ')}`);
+        return [];
+    }
+
+    const bienIdx = headers.indexOf('bien');
+    const tipoIdx = headers.indexOf('tipo');
+    const imagenIdx = headers.indexOf('imagen');
+
+    // Procesar filas
+    return jsonData.slice(1)
+        .map(row => ({
+            bien: row[bienIdx]?.toString().trim(),
+            tipo: row[tipoIdx]?.toString().trim().toLowerCase(),
+            imagen: imagenIdx >= 0 ? row[imagenIdx]?.toString().trim() : null
+        }))
+        .filter(item => {
+            // Filtrar filas inválidas
+            if (!item.bien || item.bien.toLowerCase() === 'n/a') return false;
+            if (!CONFIG.tipoMap[item.tipo]) return false;
+            return true;
+        });
+}
+
+// Filtrar duplicados
+function filterDuplicates(data, existingGoods) {
+    const existing = new Set(existingGoods.map(g => g.toLowerCase()));
+    return data.filter(item => !existing.has(item.bien.toLowerCase()));
+}
+
+// Obtener bienes existentes
 async function fetchExistingGoods() {
     try {
         const response = await fetch('/api/goods/get/json');
-        if (!response.ok) {
-            throw new Error('Error al consultar la API de bienes');
-        }
+        if (!response.ok) throw new Error('Error al consultar bienes');
+
         const data = await response.json();
-        console.log('Datos obtenidos de la API:', data);
-        // Retornar los bienes existentes en minúsculas para evitar duplicados
-        return data.map(item => item.bien.toLowerCase());
+        return data.map(item => item.bien);
     } catch (error) {
-        console.error('Error al obtener los bienes de la API:', error);
-        showToast({ success: false, message: 'Error al obtener los bienes de la API: ' + error.message });
+        console.error('Error al obtener bienes:', error);
         return [];
     }
+}
+
+// Renderizar tabla de previsualización
+function renderPreviewTable(data) {
+    const tbody = document.getElementById('excel-preview-body');
+    tbody.innerHTML = '';
+
+    data.forEach((item, index) => {
+        const row = createPreviewRow(item, index);
+        tbody.appendChild(row);
+    });
+
+    const table = document.querySelector('#excel-preview-table table');
+    table.classList.remove('hidden');
+    updateEnviarButtonState();
+}
+
+// Crear fila de previsualización
+function createPreviewRow(item, index) {
+    const tr = document.createElement('tr');
+
+    // Columna Bien
+    const tdBien = document.createElement('td');
+    tdBien.textContent = item.bien;
+    tr.appendChild(tdBien);
+
+    // Columna Tipo
+    const tdTipo = document.createElement('td');
+    tdTipo.textContent = item.tipo.charAt(0).toUpperCase() + item.tipo.slice(1);
+    tr.appendChild(tdTipo);
+
+    // Columna Imagen
+    const tdImagen = document.createElement('td');
+    const imageContainer = createImageUploadContainer(index);
+    tdImagen.appendChild(imageContainer);
+    tr.appendChild(tdImagen);
+
+    // Columna Eliminar
+    const tdTrash = document.createElement('td');
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-times close-icon';
+    icon.title = 'Eliminar';
+    icon.onclick = () => {
+        tr.remove();
+        updateEnviarButtonState();
+    };
+    tdTrash.appendChild(icon);
+    tr.appendChild(tdTrash);
+
+    return tr;
+}
+
+// Crear contenedor de imagen con botón y preview
+function createImageUploadContainer(index) {
+    const container = document.createElement('div');
+    container.className = 'image-upload-container';
+
+    // Input oculto
+    const imgInput = document.createElement('input');
+    imgInput.type = 'file';
+    imgInput.accept = 'image/*';
+    imgInput.style.display = 'none';
+    imgInput.dataset.index = index;
+    imgInput.id = `img-input-${index}`;
+
+    // Botón para seleccionar imagen (visible por defecto)
+    const selectBtn = document.createElement('button');
+    selectBtn.type = 'button';
+    selectBtn.className = 'btn-select-image';
+    selectBtn.innerHTML = '<i class="fas fa-image"></i> Seleccionar imagen';
+    selectBtn.onclick = () => imgInput.click();
+
+    // Contenedor de preview (oculto por defecto)
+    const previewContainer = document.createElement('div');
+    previewContainer.className = 'image-preview-container';
+    previewContainer.style.display = 'none';
+
+    // Indicador visual de imagen seleccionada
+    const preview = document.createElement('span');
+    preview.className = 'image-preview-indicator';
+    preview.innerHTML = '<i class="fas fa-check-circle"></i> <span class="image-name"></span>';
+
+    // Botón para cambiar imagen
+    const changeBtn = document.createElement('button');
+    changeBtn.type = 'button';
+    changeBtn.className = 'btn-change-image';
+    changeBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Cambiar';
+    changeBtn.onclick = () => imgInput.click();
+
+    previewContainer.appendChild(preview);
+    previewContainer.appendChild(changeBtn);
+
+    // Evento cuando se selecciona una imagen
+    imgInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validar tamaño de imagen
+        if (file.size > CONFIG.maxImageSize) {
+            alert(`La imagen es demasiado grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Máximo permitido: 2MB`);
+            imgInput.value = '';
+            return;
+        }
+
+        // Validar tipo de archivo
+        if (!file.type.startsWith('image/')) {
+            alert('El archivo debe ser una imagen válida');
+            imgInput.value = '';
+            return;
+        }
+
+        // Mostrar nombre del archivo
+        const fileName = file.name.length > 20
+            ? file.name.substring(0, 17) + '...'
+            : file.name;
+        preview.querySelector('.image-name').textContent = fileName;
+
+        // Actualizar UI: ocultar botón de seleccionar, mostrar preview
+        selectBtn.style.display = 'none';
+        previewContainer.style.display = 'flex';
+    };
+
+    container.appendChild(imgInput);
+    container.appendChild(selectBtn);
+    container.appendChild(previewContainer);
+
+    return container;
+}
+
+// Enviar datos al servidor
+async function sendGoodsData() {
+    const rows = document.querySelectorAll('#excel-preview-body tr');
+    if (!rows.length) return;
+
+    const formData = new FormData();
+    let totalSize = 0;
+    const images = [];
+
+    // Recopilar datos y calcular tamaño total
+    rows.forEach((row, index) => {
+        const cells = row.querySelectorAll('td');
+        const bien = cells[0].textContent.trim();
+        const tipo = cells[1].textContent.trim().toLowerCase();
+        const imgInput = cells[2].querySelector('input[type="file"]');
+        const imagen = imgInput?.files[0];
+
+        const tipoEnum = CONFIG.tipoMap[tipo];
+
+        if (bien && tipoEnum) {
+            formData.append(`goods[${index}][nombre]`, bien);
+            formData.append(`goods[${index}][tipo]`, tipoEnum);
+
+            if (imagen) {
+                totalSize += imagen.size;
+                images.push({ index, file: imagen });
+                formData.append(`goods_${index}_imagen`, imagen);
+            }
+        }
+    });
+
+    // Validar tamaño total
+    if (totalSize > CONFIG.maxTotalSize) {
+        const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+        const maxMB = (CONFIG.maxTotalSize / 1024 / 1024).toFixed(2);
+        alert(`El tamaño total de las imágenes (${totalMB}MB) excede el límite permitido (${maxMB}MB).\n\nPor favor:\n- Reduce el número de imágenes\n- Usa imágenes más pequeñas\n- Envía en múltiples lotes`);
+        return;
+    }
+
+    // Indicador de progreso
+    const progressDiv = document.createElement('div');
+    progressDiv.className = 'upload-progress active';
+    progressDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo datos...';
+    document.body.appendChild(progressDiv);
+
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const response = await fetch('/api/goods/batchCreate', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            body: formData
+        });
+
+        // Verificar si la respuesta es JSON válida
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Respuesta no JSON:', text);
+
+            // Detectar error de límite PHP
+            if (text.includes('POST Content-Length') || text.includes('exceeds the limit')) {
+                throw new Error('El tamaño de los datos excede el límite del servidor. Reduce el número de imágenes o su tamaño.');
+            }
+
+            throw new Error('El servidor respondió con un formato inválido. Revisa la consola para más detalles.');
+        }
+
+        const data = await response.json();
+        showToast(data);
+
+        if (data.success) {
+            window.globalAutocomplete?.recargarDatos();
+            loadContent('/goods');
+            btnClearExcelUploadUI();
+        }
+
+        progressDiv.remove();
+
+    } catch (error) {
+        console.error('Error:', error);
+        showToast({
+            success: false,
+            message: error.message || 'Error de conexión.'
+        });
+        progressDiv.remove();
+    }
+}
+
+// Limpiar UI
+function btnClearExcelUploadUI() {
+    document.getElementById('excelFileInput').value = '';
+    document.getElementById('excel-preview-body').innerHTML = '';
+    document.querySelector('#excel-preview-table table').classList.add('hidden');
+    updateEnviarButtonState();
+}
+
+// Actualizar estado del botón enviar
+function updateEnviarButtonState() {
+    const btn = document.getElementById('btnEnviarExcel');
+    const rowCount = document.querySelectorAll('#excel-preview-body tr').length;
+    if (btn) btn.disabled = rowCount === 0;
 }

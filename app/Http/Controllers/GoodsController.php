@@ -46,7 +46,7 @@ class GoodsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:assets,name',
             'tipo'   => 'required|integer|in:1,2',
             'imagen' => 'nullable|image|max:2048' // 2 MB
         ]);
@@ -77,7 +77,7 @@ class GoodsController extends Controller
     {
         $request->validate([
             'id'     => 'required|integer|exists:assets,id',
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:assets,name,' . $asset->id,
             'imagen' => 'nullable|image|max:2048'
         ]);
 
@@ -162,124 +162,80 @@ class GoodsController extends Controller
     public function batchCreate(Request $request)
     {
         try {
-            dd($request->all());
-            // Obtener todos los datos del request
-            $allData = $request->all();
-
-            // Obtener los bienes del request (puede venir como array anidado)
             $goods = $request->input('goods', []);
 
-            // Si goods está vacío, intentar obtenerlo de otra forma
-            if (empty($goods) && isset($allData['goods'])) {
-                $goods = $allData['goods'];
-            }
-
-            if (empty($goods) || !is_array($goods)) {
+            if (empty($goods)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se recibieron datos válidos para procesar.'
+                    'message' => 'No se recibieron datos válidos.'
                 ], 400);
             }
 
             $created = 0;
             $errors = [];
-            $createdAssets = [];
 
-            // Procesar cada bien
             foreach ($goods as $index => $good) {
                 try {
-                    // Validar que good sea un array
-                    if (!is_array($good)) {
-                        $errors[] = "Fila {$index}: Formato de datos inválido";
+                    // Validar datos
+                    $validator = validator($good, [
+                        'nombre' => 'required|string|unique:assets,name',
+                        'tipo' => 'required|in:1,2'
+                    ]);
+
+                    if ($validator->fails()) {
+                        $errors[] = "Fila {$index}: " . $validator->errors()->first();
                         continue;
                     }
 
-                    // Validar datos básicos
-                    $nombre = isset($good['nombre']) ? trim($good['nombre']) : '';
-                    $tipo = isset($good['tipo']) ? $good['tipo'] : null;
-
-                    if (empty($nombre) || $tipo === null) {
-                        $errors[] = "Fila {$index}: Faltan datos requeridos (nombre o tipo)";
-                        continue;
-                    }
-
-                    // Validar tipo
-                    $tipo = (int) $tipo;
-                    if (!in_array($tipo, [1, 2])) {
-                        $errors[] = "Fila {$index}: Tipo inválido. Debe ser 1 (Cantidad) o 2 (Serial)";
-                        continue;
-                    }
-
-                    // Verificar si el bien ya existe
-                    $existingAsset = Asset::where('name', $nombre)->first();
-                    if ($existingAsset) {
-                        $errors[] = "Fila {$index}: El bien '{$nombre}' ya existe";
-                        continue;
-                    }
-
-                    // Procesar imagen si existe
+                    // Procesar imagen
                     $imagePath = null;
                     $imageKey = "goods_{$index}_imagen";
 
                     if ($request->hasFile($imageKey)) {
                         $image = $request->file($imageKey);
 
-                        // Validar que sea una imagen
-                        if ($image->isValid()) {
-                            // Validar tamaño (2 MB)
-                            if ($image->getSize() <= 2048 * 1024) {
-                                // Validar que sea realmente una imagen
-                                $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
-                                if (in_array($image->getMimeType(), $allowedMimes)) {
-                                    $imagePath = $image->store('assets/goods', 'public');
-                                } else {
-                                    $errors[] = "Fila {$index}: El archivo debe ser una imagen válida (JPEG, PNG, GIF, WEBP)";
-                                }
-                            } else {
-                                $errors[] = "Fila {$index}: La imagen excede el tamaño máximo (2MB)";
-                            }
-                        } else {
-                            $errors[] = "Fila {$index}: La imagen es inválida";
+                        $validator = validator(['imagen' => $image], [
+                            'imagen' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+                        ]);
+
+                        if ($validator->fails()) {
+                            $errors[] = "Fila {$index}: " . $validator->errors()->first();
+                            continue;
                         }
+
+                        $imagePath = $image->store('assets/goods', 'public');
                     }
 
                     // Crear el bien
-                    $asset = Asset::create([
-                        'name'  => $nombre,
-                        'type'  => $tipo,
+                    Asset::create([
+                        'name' => $good['nombre'],
+                        'type' => (int)$good['tipo'] === 1 ? 'Cantidad' : 'Serial',
                         'image' => $imagePath
                     ]);
 
                     $created++;
-                    $createdAssets[] = [
-                        'id' => $asset->id,
-                        'name' => $asset->name,
-                        'type' => $asset->type
-                    ];
 
                 } catch (\Exception $e) {
-                    $errors[] = "Fila {$index}: Error al crear bien - " . $e->getMessage();
+                    $errors[] = "Fila {$index}: {$e->getMessage()}";
                 }
             }
 
-            // Preparar respuesta
             $message = "Se crearon {$created} bien(es) exitosamente.";
             if (!empty($errors)) {
-                $message .= " " . count($errors) . " error(es) encontrado(s).";
+                $message .= " " . count($errors) . " error(es).";
             }
 
             return response()->json([
                 'success' => $created > 0,
                 'message' => $message,
                 'created' => $created,
-                'errors' => $errors,
-                'assets' => $createdAssets
-            ], $created > 0 ? 200 : 400);
+                'errors' => $errors
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al procesar la solicitud: ' . $e->getMessage()
+                'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -293,44 +249,16 @@ class GoodsController extends Controller
      */
     public function downloadTemplate()
     {
-        // Crear contenido Excel en formato SpreadsheetML (compatible con Excel)
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
- <Styles>
-  <Style ss:ID="Header">
-   <Font ss:Bold="1"/>
-   <Interior ss:Color="#CCCCCC" ss:Pattern="Solid"/>
-  </Style>
- </Styles>
- <Worksheet ss:Name="Bienes">
-  <Table>
-   <Row>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">Bien</Data></Cell>
-    <Cell ss:StyleID="Header"><Data ss:Type="String">Tipo</Data></Cell>
-   </Row>
-   <Row>
-    <Cell><Data ss:Type="String">Ejemplo 1</Data></Cell>
-    <Cell><Data ss:Type="String">Cantidad</Data></Cell>
-   </Row>
-   <Row>
-    <Cell><Data ss:Type="String">Ejemplo 2</Data></Cell>
-    <Cell><Data ss:Type="String">Serial</Data></Cell>
-   </Row>
-  </Table>
- </Worksheet>
-</Workbook>';
+        $filePath = storage_path('app/templates/Plantilla Crear Bienes.xlsx');
 
-        $filename = 'plantilla_bienes.xls';
+        if (!file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El archivo de plantilla no se encuentra disponible.'
+            ], 404);
+        }
 
-        return response($xml, 200)
-            ->header('Content-Type', 'application/vnd.ms-excel')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-            ->header('Cache-Control', 'max-age=0');
+        return response()->download($filePath, 'Plantilla Crear Bienes.xlsx');
     }
 
     /**

@@ -40,29 +40,31 @@
         </button>
     </div>
 
-    <br>
+    <br />
 
-    <h3>Previsualización de datos</h3>
-    <div id="excel-preview-table">
-        <table class="hidden">
-            <thead>
-                <tr>
-                    <th>Bien</th>
-                    <th>Tipo</th>
-                    <th>Imagen</th>
-                </tr>
-            </thead>
-            <tbody id="excel-preview-body">
-            </tbody>
-        </table>
+    <div>
+        <h3>Previsualización de datos</h3>
+        <div id="excel-preview-table">
+            <table class="hidden">
+                <thead>
+                    <tr>
+                        <th>Bien</th>
+                        <th>Tipo</th>
+                        <th>Imagen</th>
+                    </tr>
+                </thead>
+                <tbody id="excel-preview-body">
+                </tbody>
+            </table>
+        </div>
+
+        <button onclick="btnClearExcelUploadUI()" class="btn">Limpiar</button>
+        <button id="btnEnviarExcel" class="btn create-btn"
+            onclick="sendGoodsData()"
+            disabled>
+            Enviar
+        </button>
     </div>
-
-    <button onclick="btnClearExcelUploadUI()" class="btn">Cancelar</button>
-    <button id="btnEnviarExcel" class="btn create-btn"
-        onclick="sendGoodsData(collectGoodsData())"
-        disabled>
-        Enviar
-    </button>
 
 </div>
 @endsection

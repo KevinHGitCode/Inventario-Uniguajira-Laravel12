@@ -160,3 +160,81 @@
     font-size: 1em;
     margin-left: 6px;
 }
+
+
+/* Estilos para la carga de imágenes */
+.image-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.image-preview-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-select-image,
+.btn-change-image {
+    padding: 6px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+}
+
+.btn-select-image:hover,
+.btn-change-image:hover {
+    background-color: #0056b3;
+}
+
+.btn-change-image {
+    background-color: #6c757d;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.btn-change-image:hover {
+    background-color: #545b62;
+}
+
+.image-preview-indicator {
+    color: #28a745;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.image-preview-indicator .fa-check-circle {
+    font-size: 16px;
+}
+
+.image-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.upload-progress {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 20px 40px;
+    border-radius: 8px;
+    z-index: 9999;
+    display: none;
+}
+
+.upload-progress.active {
+    display: block;
+}
