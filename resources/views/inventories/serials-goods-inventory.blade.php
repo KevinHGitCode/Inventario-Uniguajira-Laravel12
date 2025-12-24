@@ -19,19 +19,19 @@
             <span class="location">Inventario - {{ $inventory->name }}</span>
         </div>
 
-        <button class="btn-back" onclick="loadContent('{{ route('inventory.goods', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id]) }}')">
+        <button class="btn-back" onclick="loadContent(
+                '{{ route( 'inventory.goods', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id]) }}',
+                            { onSuccess: () => initGoodsInventoryFunctions() })">
             <i class="fas fa-arrow-left me-2"></i>
             <span>Volver</span>
         </button>
     </div>
 
-    {{-- buscador --}}
-    <div class="top-bar">
-        <div class="search-container">
-            <input id="searchGoodsSerialsInventory" class="search-bar searchInput" type="text" placeholder="Buscar serial..." />
-            <i class="search-icon fas fa-search"></i>
-        </div>
-    </div>
+    <x-generals.top-bar
+        id="searchGoodsSerialsInventory"
+        placeholder="Buscar bien serial..."
+        canCreate="false"
+    />
 
 
     {{-- barra de control --}}

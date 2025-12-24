@@ -9,30 +9,19 @@
         <h2>Catalogo de bienes</h2>
 
         {{-- Botón subir Excel --}}
-        <label class="excel-upload-btn" title="Subir Excel"
-            onclick="loadContent( '{{ route('goods.excel-upload') }}' )">
-            <i class="fas fa-file-excel"></i>
-        </label>
-    </div>
-
-    <div class="top-bar">
-        <div class="search-container">
-            <input
-                type="text"
-                id="searchGood"
-                placeholder="Buscar o agregar bien"
-                class="search-bar searchInput"
-            />
-            <i class="search-icon fas fa-search"></i>
-        </div>
-
-        @if(Auth::user()->role === 'administrador')
-            <button id="btnCrear" class="create-btn" onclick="mostrarModal('#modalCrearBien')">
-                Crear
-            </button>
+        @if (Auth::user()->role === 'administrador')
+            <label class="excel-upload-btn" title="Subir Excel"
+                onclick="loadContent( '{{ route('goods.excel-upload') }}' )">
+                <i class="fas fa-file-excel"></i>
+            </label>
         @endif
-
     </div>
+
+    <x-generals.top-bar
+        id="searchGood"
+        placeholder="Buscar bien..."
+        modal="#modalCrearBien"
+    />
 
     {{-- Cuando NO hay bienes --}}
     @if($dataGoods->isEmpty())
@@ -85,10 +74,11 @@
     @endif
 
     {{-- MODALES --}}
-    <x-modal.good mode="create" />
-    <x-modal.good mode="edit" />
+    @if (Auth::user()->role === 'administrador')
+        <x-modal.good mode="create" />
+        <x-modal.good mode="edit" />
+    @endif
 
-    {{-- 🔽 Agregamos este bloque --}}
     @once
         <script>
             document.addEventListener('DOMContentLoaded', () => {

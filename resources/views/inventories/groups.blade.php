@@ -11,19 +11,11 @@
 
     <h2 class="location">Grupos</h2>
 
-    {{-- Top bar --}}
-    <div class="top-bar">
-        <div class="search-container">
-            <input id="searchGroup" class="search-bar searchInput" type="text" placeholder="Buscar grupos..." />
-            <i class="search-icon fas fa-search"></i>
-        </div>
-
-        @if(Auth::user()->role === 'administrador')
-            <button id="btnCrearGrupo" class="create-btn" onclick="mostrarModal('#modalCrearGrupo')">
-                Crear
-            </button>
-        @endif
-    </div>
+    <x-generals.top-bar
+        id="searchGroup"
+        placeholder="Buscar grupo..."
+        modal="#modalCrearGrupo"
+    />
 
     {{-- Barra de control para selección múltiple --}}
     @if(Auth::user()->role === 'administrador')

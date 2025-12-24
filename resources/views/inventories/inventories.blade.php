@@ -20,24 +20,11 @@
         </button>
     </div>
 
-    {{-- Barra de búsqueda --}}
-    <div class="top-bar">
-        <div class="search-container">
-            <input
-                id="searchInventory"
-                class="search-bar searchInput"
-                type="text"
-                placeholder="Buscar inventarios..."
-            />
-            <i class="search-icon fas fa-search"></i>
-        </div>
-
-        @if(Auth::user()->role === 'administrador')
-            <button class="create-btn" onclick="mostrarModal('#modalCrearInventario')">
-                Crear
-            </button>
-        @endif
-    </div>
+    <x-generals.top-bar
+        id="searchInventory"
+        placeholder="Buscar inventario..."
+        modal="#modalCrearInventario"
+    />
 
     {{-- Barra de control --}}
     @if(Auth::user()->role === 'administrador')

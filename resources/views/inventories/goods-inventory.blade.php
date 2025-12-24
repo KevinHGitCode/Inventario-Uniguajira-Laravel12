@@ -61,27 +61,17 @@
             @endif
         </div>
 
-        <button class="btn-back" onclick="loadContent('{{ route('inventory.inventories', $inventory->group_id) }}')">
+        <button class="btn-back" onclick="loadContent('{{ route('inventory.inventories', $inventory->group_id) }}', { onSuccess: () => initInventoryFunctions() })">
             <i class="fas fa-arrow-left me-2"></i>
             <span>Volver</span>
         </button>
     </div>
 
-    <div class="top-bar">
-        <div class="search-container">
-            <input id="searchGoodInventory"
-                   class="search-bar searchInput"
-                   type="text"
-                   placeholder="Buscar bienes…"/>
-            <i class="search-icon fas fa-search"></i>
-        </div>
-
-        @if(auth()->user()->role === 'administrador')
-            <button class="create-btn" onclick="btnAbrirModalCrearBien()">
-                Crear
-            </button>
-        @endif
-    </div>
+    <x-generals.top-bar
+        id="searchGoodInventory"
+        placeholder="Buscar bien..."
+        onclick="btnAbrirModalCrearBien"
+    />
 
     @if(Auth::user()->role === 'administrador')
     {{-- Barra de control para bienes --}}

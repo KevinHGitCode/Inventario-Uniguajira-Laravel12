@@ -40,7 +40,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <button id="btnCrearInventario" type="submit" class="btn submit-btn">Guardar</button>
+                    <button type="submit" class="btn submit-btn">Guardar</button>
                 </div>
 
             @elseif($isRename)
