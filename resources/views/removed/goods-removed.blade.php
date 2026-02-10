@@ -59,13 +59,11 @@
 
 </div>
 
-{{-- Modal de Detalles --}}
 <div id="modalRemovedDetails" class="modal">
     <div class="modal-content">
         <span class="close" onclick="ocultarModal('#modalRemovedDetails')">&times;</span>
         <h2>Detalles del Bien Dado de Baja</h2>
         <div id="removedDetailsContent" class="form-container">
-            <!-- Contenido dinámico -->
         </div>
     </div>
 </div>

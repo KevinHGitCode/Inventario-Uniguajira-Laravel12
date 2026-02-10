@@ -133,7 +133,7 @@ function btnDarDeBajaBienCantidad() {
     document.getElementById('darDeBajaBienId').value = idBien;
     document.getElementById('darDeBajaInventarioId').value = idInventario;
     document.getElementById('darDeBajaNombreBienCantidad').value = selectedItem.name;
-    document.getElementById('darDeBajaCantidadDisponible').value = selectedItem.cantidad;
+    document.getElementById('darDeBajaCantidadDisponible').value = selectedItem.element.dataset.cantidad;
     
     // Establecer el máximo permitido
     document.getElementById('darDeBajaCantidadBien').setAttribute('max', selectedItem.cantidad);

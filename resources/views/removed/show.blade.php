@@ -1,6 +1,3 @@
-{{-- removed/show.blade.php --}}
-{{-- Vista parcial para mostrar detalles de un bien dado de baja --}}
-
 <div class="form-section">
     <div class="section-header">Información del Bien</div>
     <div class="form-fields-grid">
