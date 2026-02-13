@@ -1,20 +1,29 @@
+{{-- =========================
+    DETALLES DEL BIEN DADO DE BAJA
+    (Compatible con Cantidad y Serial)
+========================= --}}
+
+{{-- 1) INFORMACIÓN DEL BIEN --}}
 <div class="form-section">
     <div class="section-header">Información del Bien</div>
+
     <div class="form-fields-grid">
+        {{-- Nombre en toda la fila --}}
         <div class="form-field-full">
             <label class="form-label">Nombre del Bien:</label>
             <input type="text" class="form-input" value="{{ $removedAsset->name }}" disabled />
         </div>
 
+        {{-- Tipo --}}
         <div>
             <label class="form-label">Tipo:</label>
             <input type="text" class="form-input" value="{{ $removedAsset->type }}" disabled />
         </div>
 
-        {{-- ✅ MODIFICACIÓN: Si es Cantidad mostrar quantity, si es Serial mostrar serial --}}
+        {{-- Cantidad o Serial --}}
         @if($removedAsset->type === 'Cantidad')
             <div>
-                <label class="form-label">Cantidad Dada de Baja:</label>
+                <label class="form-label">Cantidad dada de baja:</label>
                 <input type="text" class="form-input" value="{{ $removedAsset->quantity }}" disabled />
             </div>
         @else
@@ -23,12 +32,14 @@
                 <input type="text" class="form-input" value="{{ $removedAsset->serial ?? 'N/A' }}" disabled />
             </div>
         @endif
-        {{-- ✅ FIN MODIFICACIÓN --}}
     </div>
 </div>
 
+
+{{-- 2) UBICACIÓN ORIGINAL --}}
 <div class="form-section">
     <div class="section-header">Ubicación Original</div>
+
     <div class="form-fields-grid">
         <div>
             <label class="form-label">Grupo:</label>
@@ -40,19 +51,21 @@
             <input type="text" class="form-input" value="{{ $removedAsset->inventory_name }}" disabled />
         </div>
 
-        @if($removedAsset->inventory_responsible)
-        <div>
-            <label class="form-label">Responsable del Inventario:</label>
-            <input type="text" class="form-input" value="{{ $removedAsset->inventory_responsible }}" disabled />
-        </div>
+        @if(!empty($removedAsset->inventory_responsible))
+            <div class="form-field-full">
+                <label class="form-label">Responsable del Inventario:</label>
+                <input type="text" class="form-input" value="{{ $removedAsset->inventory_responsible }}" disabled />
+            </div>
         @endif
     </div>
 </div>
 
-{{-- ✅ MODIFICACIÓN: Si es Serial mostrar detalles técnicos --}}
+
+{{-- 3) DETALLES DEL EQUIPO (SOLO SERIAL) --}}
 @if($removedAsset->type === 'Serial')
 <div class="form-section">
-    <div class="section-header">Información del Equipo (Serial)</div>
+    <div class="section-header">Detalles del Equipo (Serial)</div>
+
     <div class="form-fields-grid">
         <div>
             <label class="form-label">Marca:</label>
@@ -88,20 +101,28 @@
                 disabled />
         </div>
 
-        @if(!empty($removedAsset->technical_conditions))
+        {{-- Condiciones técnicas full --}}
         <div class="form-field-full">
             <label class="form-label">Condiciones Técnicas:</label>
-            <textarea class="form-input" rows="3" disabled>{{ $removedAsset->technical_conditions }}</textarea>
+            <textarea class="form-input" rows="3" disabled>{{ $removedAsset->technical_conditions ?? 'N/A' }}</textarea>
         </div>
-        @endif
+
+        {{-- Descripción full --}}
+        <div class="form-field-full">
+            <label class="form-label">Descripción:</label>
+            <textarea class="form-input" rows="3" disabled>{{ $removedAsset->description ?? 'N/A' }}</textarea>
+        </div>
     </div>
 </div>
 @endif
-{{-- ✅ FIN MODIFICACIÓN --}}
 
+
+{{-- 4) INFORMACIÓN DE LA BAJA --}}
 <div class="form-section">
     <div class="section-header">Información de la Baja</div>
+
     <div class="form-fields-grid">
+        {{-- Motivo full --}}
         <div class="form-field-full">
             <label class="form-label">Motivo de la Baja:</label>
             <textarea class="form-input" rows="3" disabled>{{ $removedAsset->reason ?? 'Sin motivo especificado' }}</textarea>
@@ -112,7 +133,7 @@
             <input type="text" class="form-input" value="{{ $removedAsset->removed_by_user ?? 'N/A' }}" disabled />
         </div>
 
-        @if($removedAsset->user_email)
+        @if(!empty($removedAsset->user_email))
         <div>
             <label class="form-label">Email del Usuario:</label>
             <input type="text" class="form-input" value="{{ $removedAsset->user_email }}" disabled />
@@ -120,7 +141,7 @@
         @endif
 
         <div>
-            <label class="form-label">Fecha y Hora de la Baja:</label>
+            <label class="form-label">Fecha y Hora:</label>
             <input type="text" class="form-input"
                 value="{{ \Carbon\Carbon::parse($removedAsset->created_at)->format('d/m/Y H:i:s') }}"
                 disabled />
@@ -128,9 +149,12 @@
     </div>
 </div>
 
-@if($removedAsset->image)
+
+{{-- 5) IMAGEN --}}
+@if(!empty($removedAsset->image))
 <div class="form-section">
     <div class="section-header">Imagen del Bien</div>
+
     <div style="text-align: center; padding: 20px;">
         <img
             src="{{ asset('storage/' . $removedAsset->image) }}"
