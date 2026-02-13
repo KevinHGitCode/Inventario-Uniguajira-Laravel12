@@ -421,4 +421,123 @@ public function removeGood(Request $request)
         ], 500);
     }
 }
+
+
+    // ============================================================
+    // ✅ MODIFICACIÓN: IMPLEMENTACIÓN removeGoodSerial()
+    // ============================================================
+
+    /**
+     * Dar de baja un bien por serial (1 unidad exacta)
+     * POST /api/goods-inventory/remove-good-serial
+     */
+    public function removeGoodSerial(Request $request)
+{
+    $validated = $request->validate([
+        'equipmentId'  => 'required|integer|exists:asset_equipments,id',
+        'inventarioId' => 'required|integer|exists:inventories,id',
+        'motivo'       => 'nullable|string|max:500',
+    ]);
+
+    $equipmentId = $validated['equipmentId'];
+    $inventoryId = $validated['inventarioId'];
+    $motivo      = $validated['motivo'] ?? 'Sin motivo especificado';
+
+    try {
+        DB::beginTransaction();
+
+        /**
+         * ✅ CORRECCIÓN IMPORTANTE
+         * En lugar de asumir que asset_equipments tiene asset_id,
+         * traemos TODO mediante JOIN con assets.
+         */
+        $equipment = DB::table('asset_equipments as ae')
+            ->join('asset_inventory as ai', 'ai.id', '=', 'ae.asset_inventory_id')
+            ->join('assets as a', 'a.id', '=', 'ai.asset_id')
+            ->where('ae.id', $equipmentId)
+            ->select(
+                'ae.*',
+                'ai.inventory_id as inventory_id',
+                'ai.asset_id as asset_id',
+                'a.name as asset_name',
+                'a.type as asset_type',
+                'a.image as asset_image'
+            )
+        ->first();
+
+
+        if (!$equipment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El bien serial no existe.'
+            ], 404);
+        }
+
+        // Validar que sea tipo Serial
+        if ($equipment->asset_type !== 'Serial') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo se pueden dar de baja bienes de tipo Serial.'
+            ], 400);
+        }
+
+        // Validar inventario
+        if ((int)$equipment->inventory_id !== (int)$inventoryId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este bien serial no pertenece al inventario seleccionado.'
+            ], 400);
+        }
+
+        /**
+         * ✅ MEJORA (también era necesaria)
+         * Tú tienes un modelo AssetEquipmentRemoved y una tabla:
+         * asset_equipments_removed
+         *
+         * Entonces NO debes guardar seriales en assets_removed.
+         * Deben ir en asset_equipments_removed.
+         */
+        DB::table('asset_equipments_removed')->insert([
+            'name'                 => $equipment->asset_name,
+            'image'                => $equipment->asset_image,
+            'description'          => $equipment->description ?? null,
+            'brand'                => $equipment->brand ?? null,
+            'model'                => $equipment->model ?? null,
+            'serial'               => $equipment->serial ?? null,
+            'status'               => $equipment->status ?? null,
+            'color'                => $equipment->color ?? null,
+            'technical_conditions' => $equipment->technical_conditions ?? null,
+            'entry_date'           => $equipment->entry_date ?? null,
+            'exit_date'            => now(),
+            'reason'               => $motivo,
+            'asset_id'             => $equipment->asset_id,
+            'inventory_id'         => $inventoryId,
+            'equipment_id'         => $equipmentId,
+            'user_id'              => auth()->user()->id,
+            'created_at'           => now(),
+            'updated_at'           => now(),
+        ]);
+        
+        // Eliminar el serial exacto
+        DB::table('asset_equipments')
+            ->where('id', $equipmentId)
+            ->delete();
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Se dio de baja el bien serial {$equipment->serial} exitosamente."
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al dar de baja el bien serial: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
 }

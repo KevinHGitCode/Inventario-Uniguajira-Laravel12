@@ -14,29 +14,54 @@ class RemovedController extends Controller
      */
     public function index(Request $request)
     {
-        // Obtener todos los bienes dados de baja con información relacionada
-        $removedAssets = DB::table('assets_removed as ar')
-            ->join('assets as a', 'ar.asset_id', '=', 'a.id')
-            ->join('inventories as i', 'ar.inventory_id', '=', 'i.id')
-            ->join('groups as g', 'i.group_id', '=', 'g.id')
-            ->leftJoin('users as u', 'ar.user_id', '=', 'u.id')
-            ->select(
-                'ar.id',
-                'ar.name as asset_name',
-                'ar.type',
-                'ar.image',
-                'ar.quantity',
-                'ar.reason',
-                'ar.created_at as removed_at',
-                'a.id as original_asset_id',
-                'i.id as inventory_id',
-                'i.name as inventory_name',
-                'g.id as group_id',
-                'g.name as group_name',
-                'u.name as removed_by_user'
-            )
-            ->orderBy('ar.created_at', 'desc')
-            ->get();
+        // 1) Bienes removidos por CANTIDAD
+    $removedByQuantity = DB::table('assets_removed as ar')
+    ->join('inventories as i', 'ar.inventory_id', '=', 'i.id')
+    ->join('groups as g', 'i.group_id', '=', 'g.id')
+    ->leftJoin('users as u', 'ar.user_id', '=', 'u.id')
+    ->select(
+        'ar.id',
+        'ar.name as asset_name',
+        'ar.type',
+        'ar.image',
+        'ar.quantity',
+        'ar.reason',
+        'ar.created_at as removed_at',
+        'ar.asset_id as original_asset_id',
+        'i.id as inventory_id',
+        'i.name as inventory_name',
+        'g.id as group_id',
+        'g.name as group_name',
+        'u.name as removed_by_user'
+    );
+
+    // 2) Bienes removidos por SERIAL (asset_equipments_removed)
+    $removedBySerial = DB::table('asset_equipments_removed as aer')
+    ->join('inventories as i', 'aer.inventory_id', '=', 'i.id')
+    ->join('groups as g', 'i.group_id', '=', 'g.id')
+    ->leftJoin('users as u', 'aer.user_id', '=', 'u.id')
+    ->select(
+        'aer.id',
+        'aer.name as asset_name',
+        DB::raw("'Serial' as type"),
+        'aer.image',
+        DB::raw("1 as quantity"),
+        'aer.reason',
+        'aer.created_at as removed_at',
+        'aer.asset_id as original_asset_id',
+        'i.id as inventory_id',
+        'i.name as inventory_name',
+        'g.id as group_id',
+        'g.name as group_name',
+        'u.name as removed_by_user'
+    );
+
+    // 3) Unir ambos
+    $removedAssets = $removedByQuantity
+    ->unionAll($removedBySerial)
+    ->orderBy('removed_at', 'desc')
+    ->get();
+
 
         // Agrupar estadísticas
         $stats = [
@@ -65,6 +90,9 @@ class RemovedController extends Controller
      */
     public function show(Request $request, $id)
     {
+        /**
+         * 1) Intentar buscar primero en assets_removed (Cantidad)
+         */
         $removedAsset = DB::table('assets_removed as ar')
             ->join('assets as a', 'ar.asset_id', '=', 'a.id')
             ->join('inventories as i', 'ar.inventory_id', '=', 'i.id')
@@ -81,6 +109,30 @@ class RemovedController extends Controller
             )
             ->where('ar.id', $id)
             ->first();
+
+        /**
+         * 2) Si NO existe, entonces buscar en asset_equipments_removed (Serial)
+         */
+        if (!$removedAsset) {
+
+            $removedAsset = DB::table('asset_equipments_removed as aer')
+                ->join('inventories as i', 'aer.inventory_id', '=', 'i.id')
+                ->join('groups as g', 'i.group_id', '=', 'g.id')
+                ->leftJoin('users as u', 'aer.user_id', '=', 'u.id')
+                ->select(
+                    'aer.*',
+                    'aer.asset_id as original_asset_id',
+                    'i.name as inventory_name',
+                    'i.responsible as inventory_responsible',
+                    'g.name as group_name',
+                    'u.name as removed_by_user',
+                    'u.email as user_email',
+                    DB::raw("'Serial' as type"),
+                    DB::raw("1 as quantity")
+                )
+                ->where('aer.id', $id)
+                ->first();
+        }
 
         if (!$removedAsset) {
             abort(404, 'Registro de baja no encontrado');

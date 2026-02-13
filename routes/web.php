@@ -118,9 +118,12 @@ Route::prefix('api')->middleware('auth')->group(function () {
         // Dar de baja bien
         Route::post('/remove-good', [GoodsInventoryController::class, 'removeGood']);
 
+        // Dar de baja bien serial
+        Route::post('/remove-good-serial', [GoodsInventoryController::class, 'removeGoodSerial']);
+
     });
 
-    // ✅ NUEVAS RUTAS API - Bienes dados de baja
+    // RUTAS API - Bienes dados de baja
     Route::prefix('removed')->group(function () {
         Route::get('/filter', [RemovedController::class, 'filter'])->name('removed.filter');
         Route::get('/export', [RemovedController::class, 'export'])->name('removed.export');

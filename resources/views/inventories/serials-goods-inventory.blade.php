@@ -12,8 +12,8 @@
     <div class="back-and-title">
         <div class="flex flex-col">
             <span id="good-serial-inventory-name"
-                  data-url="{{ route('inventory.serials', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id, 'assetId' => $serials[0]->asset_id]) }}"
-                  class="location">
+                data-url="{{ route('inventory.serials', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id, 'assetId' => $serials[0]->asset_id]) }}"
+                class="location">
                 Detalles - {{ $serials[0]->asset }}
             </span>
             <span class="location">Inventario - {{ $inventory->name }}</span>
@@ -27,17 +27,19 @@
         </button>
     </div>
 
-    <x-generals.top-bar
+    {{-- <x-generals.top-bar
         id="searchGoodsSerialsInventory"
         placeholder="Buscar bien serial..."
         canCreate="false"
-    />
-
+    /> --}}
 
     {{-- barra de control --}}
     <div id="control-bar-serial-good" class="control-bar">
         <div class="selected-name">1 seleccionado</div>
         <div class="control-actions">
+            <button class="control-btn" title="Dar de baja" onclick="btnDarDeBajaBienSerial()">
+                <i class="fas fa-trash"></i>
+            </button>
             <button class="control-btn" title="Editar" onclick="btnEditarBienSerial()">
                 <i class="fas fa-edit"></i>
             </button>
@@ -97,6 +99,8 @@
 
     {{-- MODALES --}}
     <x-modal.good-inventory-edit-serial />
+    <x-modal.good-inventory-remove-serial />
+
 
     @once
         <script>

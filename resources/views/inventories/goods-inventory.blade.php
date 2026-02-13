@@ -128,11 +128,19 @@
                         data-name="{{ $asset->asset }}"
                         data-cantidad="{{ $asset->quantity }}"
                         data-type="good"
+                
                         @if ($asset->type === 'Cantidad')
                             onclick="toggleSelectItem(this)"
+                        @else
+                            onclick="loadContent('{{ route('inventory.serials', [
+                                'groupId' => $inventory->group_id,
+                                'inventoryId' => $inventory->id,
+                                'assetId' => $asset->asset_id
+                            ]) }}', { onSuccess: () => initGoodsSerialsInventoryFunctions() })"
                         @endif
                     @endif
                 >
+        
 
                     {{-- Imagen --}}
                     <img
@@ -153,19 +161,6 @@
 
                         <p><b>Cantidad:</b> {{ $asset->quantity }}</p>
                     </div>
-
-                    {{-- Detalle seriales --}}
-                    @if($asset->type === 'Serial')
-                        <div class="actions">
-                            <button class="btn-detalle"
-                                    onclick="loadContent( '{{ route('inventory.serials', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id, 'assetId' => $asset->asset_id]) }}',
-                                                            { onSuccess: () => initGoodsSerialsInventoryFunctions() } )"
-                            >
-                                <i class="fas fa-info-circle"></i>
-                            </button>
-                        </div>
-                    @endif
-
                 </div>
             @endforeach
         </div>
