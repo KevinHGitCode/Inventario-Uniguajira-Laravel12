@@ -9,11 +9,33 @@
         <h1>Bienes Dados de Baja</h1>
     </div>
 
-    <x-generals.top-bar
-        id="searchRemovedGoods"
-        placeholder="Buscar por nombre o motivo..."
-        :canCreate="false"
-    />
+    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+        <div style="flex: 1;">
+            <x-generals.top-bar
+                id="searchRemovedGoods"
+                placeholder="Buscar por nombre o motivo..."
+                :canCreate="false"
+            />
+        </div>
+        <div style="margin-bottom: 20px">
+            <button 
+                id="btnOpenFilter" 
+                class="create-btn" 
+                onclick="openFilterModal()"
+                title="Filtrar bienes">
+                <i class="fas fa-filter"></i> Filtro
+            </button>
+            
+            <button 
+                id="btnClearFilter" 
+                class="create-btn btn-clear-filter" 
+                onclick="clearFilters()"
+                title="Limpiar filtros"
+                style="display: none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
 
     @if($removedAssets->isEmpty())
         <div class="empty-state">
@@ -45,13 +67,11 @@
                             />
                         </h3>
 
-                        {{-- ✅ MODIFICACIÓN: Si es serial, no mostrar cantidad --}}
                         @if($asset->type === 'Cantidad')
                             <p><b>Cantidad:</b> {{ $asset->quantity }}</p>
                         @else
                             <p><b>Serial:</b> {{ $asset->serial ?? 'N/A' }}</p>
                         @endif
-                        {{-- ✅ FIN MODIFICACIÓN --}}
 
                         <p><b>Inventario:</b> {{ $asset->inventory_name }}</p>
                         <p><b>Grupo:</b> {{ $asset->group_name }}</p>
@@ -66,9 +86,7 @@
 
 </div>
 
-{{-- =========================
-    MODAL FLYOUT (PANEL DERECHO)
-========================= --}}
+{{-- Modal de Detalles --}}
 <div id="modalRemovedDetails" class="modal">
     <div id="removedFlyoutPanel" class="modal-content flyout-panel">
         <span class="close" onclick="ocultarModal('#modalRemovedDetails')">&times;</span>
@@ -78,11 +96,35 @@
     </div>
 </div>
 
-{{-- ✅ ESTILOS DEL MODAL CON ANIMACIÓN --}}
+{{-- Incluir Modal de Filtros --}}
+@include('removed.filter-removed')
+
+{{-- Estilos personalizados --}}
 @once
 <style>
-    /* ✅ Overlay full screen - OCUPA TODA LA PANTALLA */
-    #modalRemovedDetails {
+    /* Botón de limpiar filtros - estilo gris proporcional */
+    .btn-clear-filter {
+        background: #6c757d !important;
+        padding: 0 15px !important;
+        min-width: auto !important;
+    }
+
+    .btn-clear-filter:hover {
+        background: #5a6268 !important;
+    }
+
+    /* Indicador visual de filtro activo */
+    .create-btn.filter-active {
+        background: #FF9800 !important;
+    }
+
+    .create-btn.filter-active:hover {
+        background: #F57C00 !important;
+    }
+
+    /* Overlay modal */
+    #modalRemovedDetails,
+    #modalFilterRemoved {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
@@ -101,17 +143,21 @@
         transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
-    /* Cuando el modal se muestra */
     #modalRemovedDetails[style*="display: block"],
     #modalRemovedDetails.show,
     #modalRemovedDetails.active,
-    #modalRemovedDetails.open {
+    #modalRemovedDetails.open,
+    #modalFilterRemoved[style*="display: block"],
+    #modalFilterRemoved.show,
+    #modalFilterRemoved.active,
+    #modalFilterRemoved.open {
         opacity: 1 !important;
         visibility: visible !important;
     }
 
-    /* ✅ Panel derecho con animación - OCUPA TODO EL ALTO */
-    #modalRemovedDetails .flyout-panel {
+    /* Panel flyout */
+    #modalRemovedDetails .flyout-panel,
+    #modalFilterRemoved .flyout-panel {
         position: fixed !important;
         top: 0 !important;
         bottom: 0 !important;
@@ -139,16 +185,18 @@
         box-shadow: -2px 0 10px rgba(0,0,0,0.1);
     }
 
-    /* ✅ Cuando el modal está visible, el panel entra desde la derecha */
     #modalRemovedDetails[style*="display: block"] .flyout-panel,
     #modalRemovedDetails.show .flyout-panel,
     #modalRemovedDetails.active .flyout-panel,
-    #modalRemovedDetails.open .flyout-panel {
+    #modalRemovedDetails.open .flyout-panel,
+    #modalFilterRemoved[style*="display: block"] .flyout-panel,
+    #modalFilterRemoved.show .flyout-panel,
+    #modalFilterRemoved.active .flyout-panel,
+    #modalFilterRemoved.open .flyout-panel {
         transform: translateX(0) !important;
     }
 
-    /* Estilos para el botón de cerrar */
-    #modalRemovedDetails .flyout-panel .close {
+    .flyout-panel .close {
         position: absolute;
         top: 20px;
         right: 25px;
@@ -160,14 +208,21 @@
         z-index: 10;
     }
 
-    #modalRemovedDetails .flyout-panel .close:hover {
+    .flyout-panel .close:hover {
         color: #000;
     }
 
-    #modalRemovedDetails .flyout-panel h2 {
+    .flyout-panel h2 {
         margin-top: 0;
         margin-bottom: 20px;
         padding-right: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .flyout-panel {
+            width: 90% !important;
+            min-width: 300px !important;
+        }
     }
 </style>
 @endonce

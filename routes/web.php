@@ -126,6 +126,7 @@ Route::prefix('api')->middleware('auth')->group(function () {
     // RUTAS API - Bienes dados de baja
     Route::prefix('removed')->group(function () {
         Route::get('/filter', [RemovedController::class, 'filter'])->name('removed.filter');
+        Route::get('/filter-options', [RemovedController::class, 'filterOptions'])->name('removed.filter-options');
         Route::get('/export', [RemovedController::class, 'export'])->name('removed.export');
         Route::get('/stats', [RemovedController::class, 'stats'])->name('removed.stats');
         Route::delete('/{id}', [RemovedController::class, 'destroy'])->name('removed.destroy');

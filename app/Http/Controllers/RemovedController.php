@@ -148,8 +148,8 @@ class RemovedController extends Controller
      */
     public function filter(Request $request)
     {
-        $query = DB::table('assets_removed as ar')
-            ->join('assets as a', 'ar.asset_id', '=', 'a.id')
+        // 1) Query para bienes removidos por CANTIDAD
+        $queryQuantity = DB::table('assets_removed as ar')
             ->join('inventories as i', 'ar.inventory_id', '=', 'i.id')
             ->join('groups as g', 'i.group_id', '=', 'g.id')
             ->leftJoin('users as u', 'ar.user_id', '=', 'u.id')
@@ -157,53 +157,149 @@ class RemovedController extends Controller
                 'ar.id',
                 'ar.name as asset_name',
                 'ar.type',
+                'ar.image',
                 'ar.quantity',
                 'ar.reason',
                 'ar.created_at as removed_at',
+                'ar.asset_id as original_asset_id',
+                'i.id as inventory_id',
                 'i.name as inventory_name',
+                'g.id as group_id',
                 'g.name as group_name',
                 'u.name as removed_by_user'
             );
 
-        // Filtrar por tipo
+        // 2) Query para bienes removidos por SERIAL
+        $querySerial = DB::table('asset_equipments_removed as aer')
+            ->join('inventories as i', 'aer.inventory_id', '=', 'i.id')
+            ->join('groups as g', 'i.group_id', '=', 'g.id')
+            ->leftJoin('users as u', 'aer.user_id', '=', 'u.id')
+            ->select(
+                'aer.id',
+                'aer.name as asset_name',
+                DB::raw("'Serial' as type"),
+                'aer.image',
+                DB::raw("1 as quantity"),
+                'aer.reason',
+                'aer.created_at as removed_at',
+                'aer.asset_id as original_asset_id',
+                'i.id as inventory_id',
+                'i.name as inventory_name',
+                'g.id as group_id',
+                'g.name as group_name',
+                'u.name as removed_by_user'
+            );
+
+        // Aplicar filtros a la query de Cantidad
         if ($request->has('type') && $request->type != 'all') {
-            $query->where('ar.type', $request->type);
+            if ($request->type == 'Cantidad') {
+                // Solo mantener query de cantidad
+                $querySerial = null;
+            } elseif ($request->type == 'Serial') {
+                // Solo mantener query de serial
+                $queryQuantity = null;
+            }
         }
 
         // Filtrar por grupo
-        if ($request->has('group_id')) {
-            $query->where('g.id', $request->group_id);
+        if ($request->has('group_id') && $request->group_id != '') {
+            if ($queryQuantity) {
+                $queryQuantity->where('g.id', $request->group_id);
+            }
+            if ($querySerial) {
+                $querySerial->where('g.id', $request->group_id);
+            }
         }
 
         // Filtrar por inventario
-        if ($request->has('inventory_id')) {
-            $query->where('i.id', $request->inventory_id);
+        if ($request->has('inventory_id') && $request->inventory_id != '') {
+            if ($queryQuantity) {
+                $queryQuantity->where('i.id', $request->inventory_id);
+            }
+            if ($querySerial) {
+                $querySerial->where('i.id', $request->inventory_id);
+            }
         }
 
         // Filtrar por rango de fechas
-        if ($request->has('date_from')) {
-            $query->where('ar.created_at', '>=', $request->date_from);
+        if ($request->has('date_from') && $request->date_from != '') {
+            if ($queryQuantity) {
+                $queryQuantity->where('ar.created_at', '>=', $request->date_from);
+            }
+            if ($querySerial) {
+                $querySerial->where('aer.created_at', '>=', $request->date_from);
+            }
         }
 
-        if ($request->has('date_to')) {
-            $query->where('ar.created_at', '<=', $request->date_to . ' 23:59:59');
+        if ($request->has('date_to') && $request->date_to != '') {
+            if ($queryQuantity) {
+                $queryQuantity->where('ar.created_at', '<=', $request->date_to . ' 23:59:59');
+            }
+            if ($querySerial) {
+                $querySerial->where('aer.created_at', '<=', $request->date_to . ' 23:59:59');
+            }
         }
 
         // Búsqueda por nombre
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('ar.name', 'like', "%{$search}%")
-                  ->orWhere('ar.reason', 'like', "%{$search}%");
-            });
+            if ($queryQuantity) {
+                $queryQuantity->where(function($q) use ($search) {
+                    $q->where('ar.name', 'like', "%{$search}%")
+                      ->orWhere('ar.reason', 'like', "%{$search}%");
+                });
+            }
+            if ($querySerial) {
+                $querySerial->where(function($q) use ($search) {
+                    $q->where('aer.name', 'like', "%{$search}%")
+                      ->orWhere('aer.reason', 'like', "%{$search}%");
+                });
+            }
         }
 
-        $removedAssets = $query->orderBy('ar.created_at', 'desc')->get();
+        // Unir las queries si ambas existen
+        if ($queryQuantity && $querySerial) {
+            $removedAssets = $queryQuantity
+                ->unionAll($querySerial)
+                ->orderBy('removed_at', 'desc')
+                ->get();
+        } elseif ($queryQuantity) {
+            $removedAssets = $queryQuantity->orderBy('ar.created_at', 'desc')->get();
+        } elseif ($querySerial) {
+            $removedAssets = $querySerial->orderBy('aer.created_at', 'desc')->get();
+        } else {
+            $removedAssets = collect();
+        }
 
         return response()->json([
             'success' => true,
             'data' => $removedAssets,
             'count' => $removedAssets->count()
+        ]);
+    }
+
+    /**
+     * Get groups and inventories for filter dropdowns
+     * GET /api/removed/filter-options
+     */
+    public function filterOptions()
+    {
+        $groups = DB::table('groups')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $inventories = DB::table('inventories')
+            ->join('groups', 'inventories.group_id', '=', 'groups.id')
+            ->select('inventories.id', 'inventories.name', 'inventories.group_id', 'groups.name as group_name')
+            ->orderBy('groups.name')
+            ->orderBy('inventories.name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'groups' => $groups,
+            'inventories' => $inventories
         ]);
     }
 
