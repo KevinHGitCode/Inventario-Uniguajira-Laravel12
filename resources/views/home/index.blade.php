@@ -16,6 +16,25 @@
 
         <div class="tasks-flex">
             @forelse($dataTasks['pendientes'] as $task)
+                @php
+                    // Calcular días de diferencia entre la fecha de la tarea y hoy
+                    $today = \Carbon\Carbon::today();
+                    $taskDate = \Carbon\Carbon::parse($task->date);
+                    $daysUntilDue = $today->diffInDays($taskDate, false);
+                    
+                    // Determinar el color según los días restantes
+                    if ($daysUntilDue < 0) {
+                        // Tarea vencida
+                        $dateColor = 'color: #dc3545; font-weight: 600;'; // Rojo
+                    } elseif ($daysUntilDue > 3) {
+                        // Más de 3 días
+                        $dateColor = 'color: #28a745; font-weight: 600;'; // Verde
+                    } else {
+                        // Entre 0 y 3 días
+                        $dateColor = 'color: #ffc107; font-weight: 600;'; // Amarillo
+                    }
+                @endphp
+                
                 <div class="task-card">
                     <button class="task-checkbox" onclick="toggleTask({{ $task->id }}, this)">✓</button>
                     <div class="task-content"
@@ -26,7 +45,9 @@
                         @endif
                     </div>
                     <div class="task-footer">
-                        <span class="task-date">{{ \Carbon\Carbon::parse($task->date)->format('d M') }}</span>
+                        <span class="task-date" style="{{ $dateColor }}">
+                            {{ \Carbon\Carbon::parse($task->date)->format('d M') }}
+                        </span>
                         <button class="task-trash-button" onclick="deleteTask({{ $task->id }})">
                             <i class="fas fa-trash"></i>
                         </button>

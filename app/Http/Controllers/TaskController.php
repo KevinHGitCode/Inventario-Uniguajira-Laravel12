@@ -13,7 +13,9 @@ class TaskController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'date' => 'required|date'
+            'date' => 'required|date|after_or_equal:today'
+        ], [
+            'date.after_or_equal' => 'La fecha de la tarea no puede ser anterior al día de hoy.'
         ]);
 
         Task::create([
@@ -29,6 +31,14 @@ class TaskController extends Controller
 
     public function update(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'date' => 'required|date|after_or_equal:today'
+        ], [
+            'date.after_or_equal' => 'La fecha de la tarea no puede ser anterior al día de hoy.'
+        ]);
+
         $task = Task::findOrFail($request->id);
         $task->update([
             'name' => $request->name,
