@@ -3,68 +3,182 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Vista principal (listado).
      */
     public function index(Request $request)
     {
-        // si es una carga AJAX, solo renderiza el contenido interno
+        $users = User::orderBy('id', 'desc')->get();
+
+        // Si es AJAX, solo renderiza la sección content (para loadContent)
         if ($request->ajax()) {
-            return view('users.index')->renderSections()['content'];
+            return view('users.index', compact('users'))
+                ->renderSections()['content'];
         }
 
-        // si es carga normal (primera vez), usa el layout completo
-        return view('users.index');
+        return view('users.index', compact('users'));
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * API: Crear usuario
+     * POST /api/users/store
      */
     public function store(Request $request)
     {
-        //
+        try {
+
+            $validated = $request->validate([
+                'name'     => ['required', 'string', 'max:255'],
+                'username' => ['required', 'string', 'max:255', 'unique:users,username'],
+                'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'string', 'min:6'],
+                'role'     => ['required', Rule::in(['administrador', 'consultor'])],
+            ]);
+
+            User::create([
+                'name'     => $validated['name'],
+                'username' => $validated['username'],
+                'email'    => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role'     => $validated['role'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'type' => 'success',
+                'message' => 'Usuario creado correctamente.',
+            ]);
+
+        } catch (ValidationException $e) {
+
+            return response()->json([
+                'success' => false,
+                'type' => 'error',
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'type' => 'error',
+                'message' => 'Ocurrió un error al crear el usuario.',
+            ], 500);
+        }
     }
 
     /**
-     * Display the specified resource.
+     * API: Actualizar usuario
+     * POST /api/users/update
      */
-    public function show(string $id)
+    public function update(Request $request)
     {
-        //
+        try {
+
+            $validated = $request->validate([
+                'id'       => ['required', 'exists:users,id'],
+                'name'     => ['required', 'string', 'max:255'],
+                'username' => [
+                    'required', 'string', 'max:255',
+                    Rule::unique('users', 'username')->ignore($request->id),
+                ],
+                'email' => [
+                    'required', 'email', 'max:255',
+                    Rule::unique('users', 'email')->ignore($request->id),
+                ],
+                'password' => ['nullable', 'string', 'min:6'],
+                'role'     => ['required', Rule::in(['administrador', 'consultor'])],
+            ]);
+
+            $user = User::findOrFail($validated['id']);
+
+            // No permitir editar tu propio rol (recomendado)
+            if (auth()->id() === $user->id && $validated['role'] !== $user->role) {
+                return response()->json([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'No puedes cambiar tu propio rol.',
+                ], 422);
+            }
+
+            $user->name = $validated['name'];
+            $user->username = $validated['username'];
+            $user->email = $validated['email'];
+            $user->role = $validated['role'];
+
+            // Solo actualiza password si el campo viene lleno
+            if (!empty($validated['password'])) {
+                $user->password = Hash::make($validated['password']);
+            }
+
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'type' => 'success',
+                'message' => 'Usuario actualizado correctamente.',
+            ]);
+
+        } catch (ValidationException $e) {
+
+            return response()->json([
+                'success' => false,
+                'type' => 'error',
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'type' => 'error',
+                'message' => 'Ocurrió un error al actualizar el usuario.',
+            ], 500);
+        }
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * API: Eliminar usuario
+     * DELETE /api/users/delete/{id}
      */
-    public function edit(string $id)
+    public function destroy($id)
     {
-        //
-    }
+        try {
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+            // No permitir eliminar el usuario autenticado
+            if ((int) auth()->id() === (int) $id) {
+                return response()->json([
+                    'success' => false,
+                    'type' => 'error',
+                    'message' => 'No puedes eliminar tu propio usuario.',
+                ], 422);
+            }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            $user = User::findOrFail($id);
+            $user->delete();
+
+            return response()->json([
+                'success' => true,
+                'type' => 'success',
+                'message' => 'Usuario eliminado correctamente.',
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'type' => 'error',
+                'message' => 'Ocurrió un error al eliminar el usuario.',
+            ], 500);
+        }
     }
 }

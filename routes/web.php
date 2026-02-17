@@ -63,6 +63,13 @@ Route::middleware('auth')->group(function () {
 
 // API routes
 Route::prefix('api')->middleware('auth')->group(function () {
+    // Users API
+    Route::prefix('users')->group(function () {
+        Route::post('store', [UserController::class, 'store'])->name('users.store');
+        Route::post('update', [UserController::class, 'update'])->name('users.update');
+        Route::delete('delete/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+
     // Tasks API
     Route::prefix('tasks')->group(function () {
         Route::patch('toggle', [TaskController::class, 'toggle']);
