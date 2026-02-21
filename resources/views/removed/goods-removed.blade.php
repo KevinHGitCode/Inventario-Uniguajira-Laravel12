@@ -18,17 +18,17 @@
             />
         </div>
         <div style="margin-bottom: 20px">
-            <button 
-                id="btnOpenFilter" 
-                class="create-btn" 
+            <button
+                id="btnOpenFilter"
+                class="create-btn"
                 onclick="openFilterModal()"
                 title="Filtrar bienes">
                 <i class="fas fa-filter"></i> Filtro
             </button>
-            
-            <button 
-                id="btnClearFilter" 
-                class="create-btn btn-clear-filter" 
+
+            <button
+                id="btnClearFilter"
+                class="create-btn btn-clear-filter"
                 onclick="clearFilters()"
                 title="Limpiar filtros"
                 style="display: none;">
@@ -47,7 +47,7 @@
             @foreach($removedAssets as $asset)
                 <div class="bien-card card-item"
                     data-search="{{ strtolower($asset->asset_name . ' ' . $asset->reason) }}"
-                    onclick="btnViewRemovedDetails({{ $asset->id }})"
+                    onclick="btnViewRemovedDetails({{ $asset->id }}, '{{ $asset->source }}')"
                     style="cursor: pointer;">
 
                     {{-- Imagen --}}
@@ -96,8 +96,17 @@
     </div>
 </div>
 
-{{-- Incluir Modal de Filtros --}}
-@include('removed.filter-removed')
+{{-- Modal de Filtros --}}
+<div id="modalFilterRemoved" class="modal">
+    <div class="modal-content flyout-panel">
+        <span class="close" onclick="ocultarModal('#modalFilterRemoved')">&times;</span>
+        <h2>Filtrar Bienes Dados de Baja</h2>
+
+        <div class="form-container">
+            @include('removed.filter-removed')
+        </div>
+    </div>
+</div>
 
 {{-- Estilos personalizados --}}
 @once
@@ -162,14 +171,12 @@
         top: 0 !important;
         bottom: 0 !important;
         right: 0 !important;
-
         height: 100vh !important;
         min-height: 100vh !important;
         max-height: 100vh !important;
         width: 42% !important;
         max-width: 700px !important;
         min-width: 420px !important;
-
         background: white !important;
         border-radius: 0 !important;
         overflow-y: auto !important;
@@ -177,11 +184,9 @@
         margin: 0 !important;
         padding: 30px 25px !important;
         box-sizing: border-box !important;
-
         transform: translateX(100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         will-change: transform;
-
         box-shadow: -2px 0 10px rgba(0,0,0,0.1);
     }
 
@@ -228,11 +233,11 @@
 @endonce
 
 @once
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            initRemovedGoodsFunctions();
-        });
-    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initRemovedGoodsFunctions();
+    });
+</script>
 @endonce
 
 </div>

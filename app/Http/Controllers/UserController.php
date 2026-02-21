@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\ActivityLogger;
 
 class UserController extends Controller
 {
@@ -42,13 +43,16 @@ class UserController extends Controller
                 'role'     => ['required', Rule::in(['administrador', 'consultor'])],
             ]);
 
-            User::create([
+            $user = User::create([
                 'name'     => $validated['name'],
                 'username' => $validated['username'],
                 'email'    => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role'     => $validated['role'],
             ]);
+
+            // ✅ Registrar actividad
+            ActivityLogger::created(User::class, $user->id, $user->name);
 
             return response()->json([
                 'success' => true,
@@ -109,6 +113,14 @@ class UserController extends Controller
                 ], 422);
             }
 
+            // ✅ Guardar valores anteriores para el log
+            $oldValues = [
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role,
+            ];
+
             $user->name = $validated['name'];
             $user->username = $validated['username'];
             $user->email = $validated['email'];
@@ -120,6 +132,20 @@ class UserController extends Controller
             }
 
             $user->save();
+
+            // ✅ Registrar actividad
+            ActivityLogger::updated(
+                User::class,
+                $user->id,
+                $user->name,
+                $oldValues,
+                [
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ]
+            );
 
             return response()->json([
                 'success' => true,
@@ -164,7 +190,12 @@ class UserController extends Controller
             }
 
             $user = User::findOrFail($id);
+            $userName = $user->name; // Guardar antes de eliminar
+
             $user->delete();
+
+            // ✅ Registrar actividad
+            ActivityLogger::deleted(User::class, $id, $userName);
 
             return response()->json([
                 'success' => true,

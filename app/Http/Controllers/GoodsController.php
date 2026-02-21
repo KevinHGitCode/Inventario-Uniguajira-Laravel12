@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Asset;
 use App\Models\AssetInventory;
 use Illuminate\Support\Facades\Storage;
+use App\Helpers\ActivityLogger;
 
 class GoodsController extends Controller
 {
@@ -63,6 +64,9 @@ class GoodsController extends Controller
             'image' => $path
         ]);
 
+        // ✅ Registrar actividad
+        ActivityLogger::created(Asset::class, $asset->id, $asset->name);
+
         return response()->json([
             'success' => true,
             'message' => 'Bien creado exitosamente.',
@@ -83,7 +87,11 @@ class GoodsController extends Controller
             'imagen' => 'nullable|image|max:2048'
         ]);
 
-        $asset = Asset::findOrFail($request->id);
+        // ✅ Guardar valores anteriores
+        $oldValues = [
+            'name' => $asset->name,
+            'image' => $asset->image,
+        ];
 
         // Procesar imagen si viene una nueva
         if ($request->hasFile('imagen')) {
@@ -100,6 +108,18 @@ class GoodsController extends Controller
         $asset->name = $request->nombre;
 
         $asset->save();
+
+        // ✅ Registrar actividad
+        ActivityLogger::updated(
+            Asset::class,
+            $asset->id,
+            $asset->name,
+            $oldValues,
+            [
+                'name' => $asset->name,
+                'image' => $asset->image,
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -138,12 +158,17 @@ class GoodsController extends Controller
             ], 400);
         }
 
+        $assetName = $asset->name; // Guardar antes de eliminar
+
         // Eliminar imagen
         if ($asset->image && Storage::disk('public')->exists($asset->image)) {
             Storage::disk('public')->delete($asset->image);
         }
 
         $asset->delete();
+
+        // ✅ Registrar actividad
+        ActivityLogger::deleted(Asset::class, $id, $assetName);
 
         return response()->json([
             'success' => true,
@@ -175,6 +200,7 @@ class GoodsController extends Controller
 
             $created = 0;
             $errors = [];
+            $createdAssets = []; // Para registrar en el log
 
             foreach ($goods as $index => $good) {
                 try {
@@ -209,17 +235,31 @@ class GoodsController extends Controller
                     }
 
                     // Crear el bien
-                    Asset::create([
+                    $asset = Asset::create([
                         'name' => $good['nombre'],
                         'type' => (int)$good['tipo'] === 1 ? 'Cantidad' : 'Serial',
                         'image' => $imagePath
                     ]);
 
+                    $createdAssets[] = $asset->name;
                     $created++;
 
                 } catch (\Exception $e) {
                     $errors[] = "Fila {$index}: {$e->getMessage()}";
                 }
+            }
+
+            // ✅ Registrar actividad masiva
+            if ($created > 0) {
+                ActivityLogger::custom(
+                    'batch_create',
+                    "Creó {$created} bien(es) mediante carga masiva: " . implode(', ', array_slice($createdAssets, 0, 5)) . ($created > 5 ? '...' : ''),
+                    [
+                        'model' => 'Asset',
+                        'count' => $created,
+                        'assets' => $createdAssets,
+                    ]
+                );
             }
 
             $message = "Se crearon {$created} bien(es) exitosamente.";

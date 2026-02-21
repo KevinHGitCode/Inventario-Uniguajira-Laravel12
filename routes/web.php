@@ -70,6 +70,12 @@ Route::prefix('api')->middleware('auth')->group(function () {
         Route::delete('delete/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
+    // Rutas API para historial
+    Route::prefix('records')->group(function () {
+        Route::delete('clean', [RecordController::class, 'clean'])->name('records.clean');
+        Route::get('export', [RecordController::class, 'export'])->name('records.export');
+    });
+
     // Tasks API
     Route::prefix('tasks')->group(function () {
         Route::patch('toggle', [TaskController::class, 'toggle']);

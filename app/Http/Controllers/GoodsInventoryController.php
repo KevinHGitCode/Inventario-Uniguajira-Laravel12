@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Inventory;
 use App\Services\GoodsInventoryService;
+use App\Helpers\ActivityLogger;
 
 class GoodsInventoryController extends Controller
 {
@@ -14,7 +15,6 @@ class GoodsInventoryController extends Controller
     public function __construct(GoodsInventoryService $service)
     {
         $this->service = $service;
-        // middleware('auth') si lo necesitas
     }
 
     // ------------------------------
@@ -24,11 +24,10 @@ class GoodsInventoryController extends Controller
     {
         $inventory = Inventory::findOrFail($inventoryId);
 
-        // Si inventory->group_id no coincide con $groupId, lanzar 404
         if ($inventory->group_id != $groupId) {
             abort(404);
         }
-        // dd($inventory);
+
         $assets = DB::table('inventory_goods_view')
             ->where('inventory_id', $inventoryId)
             ->get();
@@ -52,7 +51,7 @@ class GoodsInventoryController extends Controller
         $data = $request->validate([
             'inventarioId' => 'required|integer|exists:inventories,id',
             'bien_id'      => 'required|integer|exists:assets,id',
-            'bien_tipo'    => 'required|in:1,2', // 1=cantidad, 2=serial
+            'bien_tipo'    => 'required|in:1,2',
         ]);
 
         $tipo = $data['bien_tipo'];
@@ -69,6 +68,23 @@ class GoodsInventoryController extends Controller
                 'message' => "No se pudo agregar el bien."
             ], 400);
         }
+
+        // ✅ Registrar actividad
+        $asset     = DB::table('assets')->where('id', $data['bien_id'])->first();
+        $inventory = Inventory::find($data['inventarioId']);
+        ActivityLogger::custom(
+            'create',
+            "Agregó '{$asset->name}' al inventario: {$inventory->name}",
+            [
+                'model'      => 'AssetInventory',
+                'model_id'   => $id,
+                'new_values' => [
+                    'asset'     => $asset->name,
+                    'inventory' => $inventory->name,
+                    'tipo'      => $tipo == 1 ? 'Cantidad' : 'Serial',
+                ],
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -101,25 +117,25 @@ class GoodsInventoryController extends Controller
     private function handleSerialType(Request $request)
     {
         $validated = $request->validate([
-            'serial' => 'required|string|max:255',
-            'descripcion' => 'nullable|string|max:255',
-            'marca' => 'nullable|string|max:255',
-            'modelo' => 'nullable|string|max:255',
-            'estado' => 'nullable|string|max:100',
-            'color' => 'nullable|string|max:100',
+            'serial'               => 'required|string|max:255',
+            'descripcion'          => 'nullable|string|max:255',
+            'marca'                => 'nullable|string|max:255',
+            'modelo'               => 'nullable|string|max:255',
+            'estado'               => 'nullable|string|max:100',
+            'color'                => 'nullable|string|max:100',
             'condiciones_tecnicas' => 'nullable|string|max:500',
-            'fecha_ingreso' => 'nullable|date',
+            'fecha_ingreso'        => 'nullable|date',
         ]);
 
         $details = [
-            'description' => $validated['descripcion'] ?? '',
-            'brand' => $validated['marca'] ?? '',
-            'model' => $validated['modelo'] ?? '',
-            'serial' => $validated['serial'],
-            'state' => $validated['estado'] ?? 'activo',
-            'color' => $validated['color'] ?? '',
+            'description'          => $validated['descripcion'] ?? '',
+            'brand'                => $validated['marca'] ?? '',
+            'model'                => $validated['modelo'] ?? '',
+            'serial'               => $validated['serial'],
+            'state'                => $validated['estado'] ?? 'activo',
+            'color'                => $validated['color'] ?? '',
             'technical_conditions' => $validated['condiciones_tecnicas'] ?? '',
-            'entry_date' => $validated['fecha_ingreso'] ?? now()->toDateString()
+            'entry_date'           => $validated['fecha_ingreso'] ?? now()->toDateString()
         ];
 
         return $this->service->addSerial(
@@ -158,6 +174,11 @@ class GoodsInventoryController extends Controller
             ], 400);
         }
 
+        // ✅ Guardar cantidad anterior para el log
+        $oldQuantity = DB::table('asset_quantities')
+            ->where('asset_inventory_id', $bienInventario->id)
+            ->value('quantity');
+
         $updated = DB::table('asset_quantities')
             ->where('asset_inventory_id', $bienInventario->id)
             ->update(['quantity' => $cantidad]);
@@ -168,6 +189,20 @@ class GoodsInventoryController extends Controller
                 'message' => 'No se pudo actualizar la cantidad.'
             ], 400);
         }
+
+        // ✅ Registrar actividad
+        $asset     = DB::table('assets')->where('id', $assetId)->first();
+        $inventory = Inventory::find($inventoryId);
+        ActivityLogger::custom(
+            'update',
+            "Actualizó cantidad de '{$asset->name}' en inventario: {$inventory->name}",
+            [
+                'model'      => 'AssetInventory',
+                'model_id'   => $bienInventario->id,
+                'old_values' => ['cantidad' => $oldQuantity],
+                'new_values' => ['cantidad' => $cantidad],
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -189,7 +224,6 @@ class GoodsInventoryController extends Controller
             ], 400);
         }
 
-        // buscar relación asset_inventory
         $rel = DB::table('asset_inventory as ai')
             ->join('assets as a', 'ai.asset_id', '=', 'a.id')
             ->where('ai.inventory_id', $inventoryId)
@@ -204,11 +238,21 @@ class GoodsInventoryController extends Controller
             ], 400);
         }
 
-        // eliminar relación
         DB::table('asset_inventory')
             ->where('inventory_id', $inventoryId)
             ->where('asset_id', $goodId)
             ->delete();
+
+        // ✅ Registrar actividad
+        $inventory = Inventory::find($inventoryId);
+        ActivityLogger::custom(
+            'delete',
+            "Eliminó '{$rel->name}' del inventario: {$inventory->name}",
+            [
+                'model'    => 'AssetInventory',
+                'model_id' => $rel->id,
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -224,30 +268,29 @@ class GoodsInventoryController extends Controller
     public function updateSerial(Request $request)
     {
         $validated = $request->validate([
-            'bienEquipoId' => 'required|integer|exists:asset_equipments,id',
-            'serial'       => 'required|string|max:255',
-            'descripcion'  => 'nullable|string|max:255',
-            'marca'        => 'nullable|string|max:255',
-            'modelo'       => 'nullable|string|max:255',
-            'estado'       => 'nullable|string|max:100',
-            'color'        => 'nullable|string|max:100',
+            'bienEquipoId'         => 'required|integer|exists:asset_equipments,id',
+            'serial'               => 'required|string|max:255',
+            'descripcion'          => 'nullable|string|max:255',
+            'marca'                => 'nullable|string|max:255',
+            'modelo'               => 'nullable|string|max:255',
+            'estado'               => 'nullable|string|max:100',
+            'color'                => 'nullable|string|max:100',
             'condiciones_tecnicas' => 'nullable|string|max:500',
-            'fecha_ingreso' => 'nullable|date',
+            'fecha_ingreso'        => 'nullable|date',
         ]);
 
         $details = [
-            'description'           => $validated['descripcion'] ?? '',
-            'brand'                 => $validated['marca'] ?? '',
-            'model'                 => $validated['modelo'] ?? '',
-            'serial'                => $validated['serial'],
-            'status'                => $validated['estado'] ?? 'active',
-            'color'                 => $validated['color'] ?? '',
-            'technical_conditions'  => $validated['condiciones_tecnicas'] ?? '',
-            'entry_date'            => $validated['fecha_ingreso'] ?? now()->toDateString(),
+            'description'          => $validated['descripcion'] ?? '',
+            'brand'                => $validated['marca'] ?? '',
+            'model'                => $validated['modelo'] ?? '',
+            'serial'               => $validated['serial'],
+            'status'               => $validated['estado'] ?? 'active',
+            'color'                => $validated['color'] ?? '',
+            'technical_conditions' => $validated['condiciones_tecnicas'] ?? '',
+            'entry_date'           => $validated['fecha_ingreso'] ?? now()->toDateString(),
         ];
 
         try {
-
             $ok = $this->service->updateSerial(
                 $validated['bienEquipoId'],
                 $details
@@ -260,13 +303,30 @@ class GoodsInventoryController extends Controller
                 ], 400);
             }
 
+            // ✅ Registrar actividad
+            $equipment = DB::table('asset_equipments as ae')
+                ->join('asset_inventory as ai', 'ai.id', '=', 'ae.asset_inventory_id')
+                ->join('assets as a', 'a.id', '=', 'ai.asset_id')
+                ->where('ae.id', $validated['bienEquipoId'])
+                ->select('a.name as asset_name', 'ae.serial')
+                ->first();
+
+            ActivityLogger::custom(
+                'update',
+                "Actualizó serial '{$validated['serial']}' de '{$equipment->asset_name}'",
+                [
+                    'model'      => 'AssetEquipment',
+                    'model_id'   => $validated['bienEquipoId'],
+                    'new_values' => $details,
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Bien serial actualizado exitosamente.'
             ]);
 
         } catch (\Exception $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -281,6 +341,15 @@ class GoodsInventoryController extends Controller
      */
     public function deleteSerial(int $equipmentId)
     {
+        // ✅ Obtener datos antes de eliminar para el log
+        $equipment = DB::table('asset_equipments as ae')
+            ->join('asset_inventory as ai', 'ai.id', '=', 'ae.asset_inventory_id')
+            ->join('assets as a', 'a.id', '=', 'ai.asset_id')
+            ->join('inventories as i', 'i.id', '=', 'ai.inventory_id')
+            ->where('ae.id', $equipmentId)
+            ->select('a.name as asset_name', 'ae.serial', 'i.name as inventory_name')
+            ->first();
+
         $deleted = $this->service->deleteSerialGood($equipmentId);
 
         if (!$deleted) {
@@ -290,6 +359,18 @@ class GoodsInventoryController extends Controller
             ], 400);
         }
 
+        // ✅ Registrar actividad
+        if ($equipment) {
+            ActivityLogger::custom(
+                'delete',
+                "Eliminó serial '{$equipment->serial}' de '{$equipment->asset_name}' en inventario: {$equipment->inventory_name}",
+                [
+                    'model'    => 'AssetEquipment',
+                    'model_id' => $equipmentId,
+                ]
+            );
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Bien serial eliminado del inventario exitosamente.'
@@ -297,247 +378,222 @@ class GoodsInventoryController extends Controller
     }
 
 
-
-    
     /**
- * Dar de baja un bien (registrar en assets_removed y reducir cantidad)
- * POST /api/goods-inventory/remove-good
- */
-public function removeGood(Request $request)
-{
-    // 1. Validar datos de entrada
-    $validated = $request->validate([
-        'bienId'       => 'required|integer|exists:assets,id',
-        'inventarioId' => 'required|integer|exists:inventories,id',
-        'cantidad'     => 'required|integer|min:1',
-        'motivo'       => 'nullable|string|max:500',
-    ]);
-
-    $assetId     = $validated['bienId'];
-    $inventoryId = $validated['inventarioId'];
-    $cantidad    = $validated['cantidad'];
-    $motivo      = $validated['motivo'] ?? 'Sin motivo especificado';
-
-    try {
-        DB::beginTransaction();
-
-        // 2. Obtener información del bien
-        $asset = DB::table('assets')->where('id', $assetId)->first();
-        
-        if (!$asset) {
-            return response()->json([
-                'success' => false,
-                'message' => 'El bien no existe.'
-            ], 404);
-        }
-
-        // 3. Verificar que sea tipo "Cantidad"
-        if ($asset->type !== 'Cantidad') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo se pueden dar de baja bienes de tipo Cantidad.'
-            ], 400);
-        }
-
-        // 4. Buscar la relación asset_inventory
-        $assetInventory = DB::table('asset_inventory')
-            ->where('asset_id', $assetId)
-            ->where('inventory_id', $inventoryId)
-            ->first();
-
-        if (!$assetInventory) {
-            return response()->json([
-                'success' => false,
-                'message' => 'El bien no existe en este inventario.'
-            ], 404);
-        }
-
-        // 5. Obtener la cantidad actual
-        $currentQuantity = DB::table('asset_quantities')
-            ->where('asset_inventory_id', $assetInventory->id)
-            ->value('quantity');
-
-        if ($currentQuantity === null) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se encontró el registro de cantidad.'
-            ], 404);
-        }
-
-        // 6. Validar que haya suficiente cantidad
-        if ($cantidad > $currentQuantity) {
-            return response()->json([
-                'success' => false,
-                'message' => "No hay suficiente cantidad. Disponible: {$currentQuantity}, Solicitado: {$cantidad}"
-            ], 400);
-        }
-
-        // 7. Registrar en la tabla assets_removed
-        DB::table('assets_removed')->insert([
-            'name'         => $asset->name,
-            'type'         => $asset->type,
-            'image'        => $asset->image,
-            'quantity'     => $cantidad,
-            'reason'       => $motivo,
-            'asset_id'     => $assetId,
-            'inventory_id' => $inventoryId,
-            'user_id'      => auth()->id(),
-            'created_at'   => now(),
-            'updated_at'   => now(),
+     * Dar de baja un bien (registrar en assets_removed y reducir cantidad)
+     * POST /api/goods-inventory/remove-good
+     */
+    public function removeGood(Request $request)
+    {
+        $validated = $request->validate([
+            'bienId'       => 'required|integer|exists:assets,id',
+            'inventarioId' => 'required|integer|exists:inventories,id',
+            'cantidad'     => 'required|integer|min:1',
+            'motivo'       => 'nullable|string|max:500',
         ]);
 
-        // 8. Reducir la cantidad en asset_quantities
-        $newQuantity = $currentQuantity - $cantidad;
-        
-        if ($newQuantity > 0) {
-            // Si aún queda cantidad, actualizar
-            DB::table('asset_quantities')
+        $assetId     = $validated['bienId'];
+        $inventoryId = $validated['inventarioId'];
+        $cantidad    = $validated['cantidad'];
+        $motivo      = $validated['motivo'] ?? 'Sin motivo especificado';
+
+        try {
+            DB::beginTransaction();
+
+            $asset = DB::table('assets')->where('id', $assetId)->first();
+
+            if (!$asset) {
+                return response()->json(['success' => false, 'message' => 'El bien no existe.'], 404);
+            }
+
+            if ($asset->type !== 'Cantidad') {
+                return response()->json(['success' => false, 'message' => 'Solo se pueden dar de baja bienes de tipo Cantidad.'], 400);
+            }
+
+            $assetInventory = DB::table('asset_inventory')
+                ->where('asset_id', $assetId)
+                ->where('inventory_id', $inventoryId)
+                ->first();
+
+            if (!$assetInventory) {
+                return response()->json(['success' => false, 'message' => 'El bien no existe en este inventario.'], 404);
+            }
+
+            $currentQuantity = DB::table('asset_quantities')
                 ->where('asset_inventory_id', $assetInventory->id)
-                ->update(['quantity' => $newQuantity]);
-        } else {
-            // Si la cantidad llega a 0, eliminar completamente la relación
-            DB::table('asset_quantities')
-                ->where('asset_inventory_id', $assetInventory->id)
-                ->delete();
-            
-            DB::table('asset_inventory')
-                ->where('id', $assetInventory->id)
-                ->delete();
+                ->value('quantity');
+
+            if ($currentQuantity === null) {
+                return response()->json(['success' => false, 'message' => 'No se encontró el registro de cantidad.'], 404);
+            }
+
+            if ($cantidad > $currentQuantity) {
+                return response()->json(['success' => false, 'message' => "No hay suficiente cantidad. Disponible: {$currentQuantity}, Solicitado: {$cantidad}"], 400);
+            }
+
+            DB::table('assets_removed')->insert([
+                'name'         => $asset->name,
+                'type'         => $asset->type,
+                'image'        => $asset->image,
+                'quantity'     => $cantidad,
+                'reason'       => $motivo,
+                'asset_id'     => $assetId,
+                'inventory_id' => $inventoryId,
+                'user_id'      => auth()->id(),
+                'created_at'   => now(),
+                'updated_at'   => now(),
+            ]);
+
+            $newQuantity = $currentQuantity - $cantidad;
+
+            if ($newQuantity > 0) {
+                DB::table('asset_quantities')
+                    ->where('asset_inventory_id', $assetInventory->id)
+                    ->update(['quantity' => $newQuantity]);
+            } else {
+                DB::table('asset_quantities')
+                    ->where('asset_inventory_id', $assetInventory->id)
+                    ->delete();
+
+                DB::table('asset_inventory')
+                    ->where('id', $assetInventory->id)
+                    ->delete();
+            }
+
+            DB::commit();
+
+            // ✅ Registrar actividad (después del commit para garantizar consistencia)
+            $inventory = Inventory::find($inventoryId);
+            ActivityLogger::custom(
+                'remove',
+                "Dio de baja {$cantidad} unidad(es) de '{$asset->name}' en inventario: {$inventory->name}",
+                [
+                    'model'      => 'AssetRemoved',
+                    'new_values' => [
+                        'asset'     => $asset->name,
+                        'inventory' => $inventory->name,
+                        'cantidad'  => $cantidad,
+                        'motivo'    => $motivo,
+                    ],
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Se dieron de baja {$cantidad} unidad(es) de {$asset->name} exitosamente."
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al dar de baja el bien: ' . $e->getMessage()
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => "Se dieron de baja {$cantidad} unidad(es) de {$asset->name} exitosamente."
-        ]);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al dar de baja el bien: ' . $e->getMessage()
-        ], 500);
     }
-}
 
-
-    // ============================================================
-    // ✅ MODIFICACIÓN: IMPLEMENTACIÓN removeGoodSerial()
-    // ============================================================
 
     /**
      * Dar de baja un bien por serial (1 unidad exacta)
      * POST /api/goods-inventory/remove-good-serial
      */
     public function removeGoodSerial(Request $request)
-{
-    $validated = $request->validate([
-        'equipmentId'  => 'required|integer|exists:asset_equipments,id',
-        'inventarioId' => 'required|integer|exists:inventories,id',
-        'motivo'       => 'nullable|string|max:500',
-    ]);
-
-    $equipmentId = $validated['equipmentId'];
-    $inventoryId = $validated['inventarioId'];
-    $motivo      = $validated['motivo'] ?? 'Sin motivo especificado';
-
-    try {
-        DB::beginTransaction();
-
-        /**
-         * ✅ CORRECCIÓN IMPORTANTE
-         * En lugar de asumir que asset_equipments tiene asset_id,
-         * traemos TODO mediante JOIN con assets.
-         */
-        $equipment = DB::table('asset_equipments as ae')
-            ->join('asset_inventory as ai', 'ai.id', '=', 'ae.asset_inventory_id')
-            ->join('assets as a', 'a.id', '=', 'ai.asset_id')
-            ->where('ae.id', $equipmentId)
-            ->select(
-                'ae.*',
-                'ai.inventory_id as inventory_id',
-                'ai.asset_id as asset_id',
-                'a.name as asset_name',
-                'a.type as asset_type',
-                'a.image as asset_image'
-            )
-        ->first();
-
-
-        if (!$equipment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'El bien serial no existe.'
-            ], 404);
-        }
-
-        // Validar que sea tipo Serial
-        if ($equipment->asset_type !== 'Serial') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo se pueden dar de baja bienes de tipo Serial.'
-            ], 400);
-        }
-
-        // Validar inventario
-        if ((int)$equipment->inventory_id !== (int)$inventoryId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Este bien serial no pertenece al inventario seleccionado.'
-            ], 400);
-        }
-
-        /**
-         * ✅ MEJORA (también era necesaria)
-         * Tú tienes un modelo AssetEquipmentRemoved y una tabla:
-         * asset_equipments_removed
-         *
-         * Entonces NO debes guardar seriales en assets_removed.
-         * Deben ir en asset_equipments_removed.
-         */
-        DB::table('asset_equipments_removed')->insert([
-            'name'                 => $equipment->asset_name,
-            'image'                => $equipment->asset_image,
-            'description'          => $equipment->description ?? null,
-            'brand'                => $equipment->brand ?? null,
-            'model'                => $equipment->model ?? null,
-            'serial'               => $equipment->serial ?? null,
-            'status'               => $equipment->status ?? null,
-            'color'                => $equipment->color ?? null,
-            'technical_conditions' => $equipment->technical_conditions ?? null,
-            'entry_date'           => $equipment->entry_date ?? null,
-            'exit_date'            => now(),
-            'reason'               => $motivo,
-            'asset_id'             => $equipment->asset_id,
-            'inventory_id'         => $inventoryId,
-            'equipment_id'         => $equipmentId,
-            'user_id'              => auth()->user()->id,
-            'created_at'           => now(),
-            'updated_at'           => now(),
-        ]);
-        
-        // Eliminar el serial exacto
-        DB::table('asset_equipments')
-            ->where('id', $equipmentId)
-            ->delete();
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => "Se dio de baja el bien serial {$equipment->serial} exitosamente."
+    {
+        $validated = $request->validate([
+            'equipmentId'  => 'required|integer|exists:asset_equipments,id',
+            'inventarioId' => 'required|integer|exists:inventories,id',
+            'motivo'       => 'nullable|string|max:500',
         ]);
 
-    } catch (\Exception $e) {
-        DB::rollBack();
+        $equipmentId = $validated['equipmentId'];
+        $inventoryId = $validated['inventarioId'];
+        $motivo      = $validated['motivo'] ?? 'Sin motivo especificado';
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al dar de baja el bien serial: ' . $e->getMessage()
-        ], 500);
+        try {
+            DB::beginTransaction();
+
+            $equipment = DB::table('asset_equipments as ae')
+                ->join('asset_inventory as ai', 'ai.id', '=', 'ae.asset_inventory_id')
+                ->join('assets as a', 'a.id', '=', 'ai.asset_id')
+                ->where('ae.id', $equipmentId)
+                ->select(
+                    'ae.*',
+                    'ai.inventory_id as inventory_id',
+                    'ai.asset_id as asset_id',
+                    'a.name as asset_name',
+                    'a.type as asset_type',
+                    'a.image as asset_image'
+                )
+                ->first();
+
+            if (!$equipment) {
+                return response()->json(['success' => false, 'message' => 'El bien serial no existe.'], 404);
+            }
+
+            if ($equipment->asset_type !== 'Serial') {
+                return response()->json(['success' => false, 'message' => 'Solo se pueden dar de baja bienes de tipo Serial.'], 400);
+            }
+
+            if ((int)$equipment->inventory_id !== (int)$inventoryId) {
+                return response()->json(['success' => false, 'message' => 'Este bien serial no pertenece al inventario seleccionado.'], 400);
+            }
+
+            DB::table('asset_equipments_removed')->insert([
+                'name'                 => $equipment->asset_name,
+                'image'                => $equipment->asset_image,
+                'description'          => $equipment->description ?? null,
+                'brand'                => $equipment->brand ?? null,
+                'model'                => $equipment->model ?? null,
+                'serial'               => $equipment->serial ?? null,
+                'status'               => $equipment->status ?? null,
+                'color'                => $equipment->color ?? null,
+                'technical_conditions' => $equipment->technical_conditions ?? null,
+                'entry_date'           => $equipment->entry_date ?? null,
+                'exit_date'            => now(),
+                'reason'               => $motivo,
+                'asset_id'             => $equipment->asset_id,
+                'inventory_id'         => $inventoryId,
+                'equipment_id'         => $equipmentId,
+                'user_id'              => auth()->user()->id,
+                'created_at'           => now(),
+                'updated_at'           => now(),
+            ]);
+
+            DB::table('asset_equipments')
+                ->where('id', $equipmentId)
+                ->delete();
+
+            DB::commit();
+
+            // ✅ Registrar actividad (después del commit para garantizar consistencia)
+            $inventory = Inventory::find($inventoryId);
+            ActivityLogger::custom(
+                'remove',
+                "Dio de baja serial '{$equipment->serial}' de '{$equipment->asset_name}' en inventario: {$inventory->name}",
+                [
+                    'model'      => 'AssetEquipment',
+                    'model_id'   => $equipmentId,
+                    'new_values' => [
+                        'asset'     => $equipment->asset_name,
+                        'serial'    => $equipment->serial,
+                        'inventory' => $inventory->name,
+                        'motivo'    => $motivo,
+                    ],
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Se dio de baja el bien serial {$equipment->serial} exitosamente."
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al dar de baja el bien serial: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
-
 }

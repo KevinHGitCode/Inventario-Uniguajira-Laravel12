@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Group;
 use App\Models\Inventory;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\ActivityLogger;
 
 class InventoryController extends Controller
 {
@@ -104,12 +105,25 @@ class InventoryController extends Controller
             'id_inventario' => 'required|integer|exists:inventories,id',
             'estado' => 'required|integer|in:1,2,3'
         ]);
-        // dd($request->all());
+
         $inventory = Inventory::findOrFail($request->id_inventario);
+
+        // ✅ Guardar valor anterior
+        $oldStatus = $inventory->conservation_status;
 
         $inventory->conservation_status = $request->estado; // bueno=1, regular=2, malo=3
         $inventory->updated_at = now();
         $inventory->save();
+
+        // ✅ Registrar actividad
+        $statusNames = [1 => 'Bueno', 2 => 'Regular', 3 => 'Malo'];
+        ActivityLogger::updated(
+            Inventory::class,
+            $inventory->id,
+            $inventory->name,
+            ['conservation_status' => $statusNames[$oldStatus] ?? 'Desconocido'],
+            ['conservation_status' => $statusNames[$request->estado] ?? 'Desconocido']
+        );
 
         return response()->json([
             'success' => true,
@@ -143,6 +157,9 @@ class InventoryController extends Controller
             'group_id' => $groupId,
             'name' => $nombre,
         ]);
+
+        // ✅ Registrar actividad
+        ActivityLogger::created(Inventory::class, $inventory->id, $inventory->name);
 
         return response()->json([
             'success' => true,
@@ -181,12 +198,24 @@ class InventoryController extends Controller
             return response()->json(['success' => false, 'message' => 'Ya existe un inventario con ese nombre en el grupo.'], 400);
         }
 
+        // ✅ Guardar valores anteriores
+        $oldValues = ['name' => $inventory->name];
+
         $inventory->name = $newName;
         $saved = $inventory->save();
 
         if (!$saved) {
             return response()->json(['success' => false, 'message' => 'No se pudo actualizar el inventario.'], 400);
         }
+
+        // ✅ Registrar actividad
+        ActivityLogger::updated(
+            Inventory::class,
+            $inventory->id,
+            $inventory->name,
+            $oldValues,
+            ['name' => $inventory->name]
+        );
 
         return response()->json(['success' => true, 'message' => 'Inventario renombrado correctamente.', 'data' => $inventory]);
     }
@@ -203,8 +232,21 @@ class InventoryController extends Controller
         ]);
 
         $inventory = Inventory::findOrFail($request->id);
+
+        // ✅ Guardar valores anteriores
+        $oldValues = ['responsible' => $inventory->responsible];
+
         $inventory->responsible = $request->responsable;
         $inventory->save();
+
+        // ✅ Registrar actividad
+        ActivityLogger::updated(
+            Inventory::class,
+            $inventory->id,
+            $inventory->name,
+            $oldValues,
+            ['responsible' => $inventory->responsible]
+        );
 
         return response()->json(['success' => true, 'message' => 'Responsable actualizado correctamente.', 'data' => $inventory]);
     }
@@ -229,8 +271,14 @@ class InventoryController extends Controller
             return response()->json(['success' => false, 'message' => 'El inventario tiene bienes asociados.']);
         }
 
+        $inventoryName = $inventory->name; // Guardar antes de eliminar
+
         try {
             $inventory->delete();
+
+            // ✅ Registrar actividad
+            ActivityLogger::deleted(Inventory::class, $id, $inventoryName);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Ocurrió un error al eliminar el inventario.'], 500);
         }

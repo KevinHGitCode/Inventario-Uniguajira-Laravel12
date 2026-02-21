@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Group;
+use App\Helpers\ActivityLogger;
 
 class GroupController extends Controller
 {
@@ -43,6 +44,9 @@ class GroupController extends Controller
 
         $group = Group::create(['name' => $nombre]);
 
+        // ✅ Registrar actividad
+        ActivityLogger::created(Group::class, $group->id, $group->name);
+
         return response()->json([
             'success' => true,
             'message' => 'Grupo creado correctamente',
@@ -81,6 +85,9 @@ class GroupController extends Controller
             ], 400);
         }
 
+        // ✅ Guardar valores anteriores
+        $oldValues = ['name' => $group->name];
+
         $group->name = $newName;
         $saved = $group->save();
 
@@ -90,6 +97,15 @@ class GroupController extends Controller
                 'message' => 'No se pudo actualizar el grupo por un error desconocido.'
             ], 400);
         }
+
+        // ✅ Registrar actividad
+        ActivityLogger::updated(
+            Group::class,
+            $group->id,
+            $group->name,
+            $oldValues,
+            ['name' => $group->name]
+        );
 
         return response()->json([
             'success' => true,
@@ -117,8 +133,14 @@ class GroupController extends Controller
             return response()->json(['success' => false, 'message' => 'El grupo tiene inventarios asociados.']);
         }
 
+        $groupName = $group->name; // Guardar antes de eliminar
+
         try {
             $group->delete();
+
+            // ✅ Registrar actividad
+            ActivityLogger::deleted(Group::class, $id, $groupName);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Ocurrió un error al intentar eliminar el grupo.'], 500);
         }

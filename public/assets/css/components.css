@@ -58,7 +58,21 @@
     background-color: #8c2b32;
 }
 
+.filter-btn {
+    background-color: #a3333d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+    white-space: nowrap;
+}
 
+.filter-btn:hover {
+    background-color: #8c2b32;
+}
 
 /* Mejoras para los botones con iconos */
 /* TODO: Esto se usa? */

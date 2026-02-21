@@ -13,13 +13,21 @@ return new class extends Migration
     {
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('SET NULL'); // actor (may be null for system)
-            $table->string('action', 20); // INSERT, UPDATE, DELETE, LOGIN, etc.
-            $table->string('table_name', 100);
-            $table->unsignedBigInteger('record_id')->nullable();
-            $table->string('details', 255);
-            $table->timestamp('created_at')->useCurrent();
-            // no updated_at (logs are immutable)
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->string('action'); // login, create, update, delete, etc
+            $table->string('model')->nullable(); // User, Task, Good, etc
+            $table->unsignedBigInteger('model_id')->nullable(); // ID del registro afectado
+            $table->text('description'); // Descripción legible de la acción
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->json('old_values')->nullable(); // Valores anteriores (para updates)
+            $table->json('new_values')->nullable(); // Valores nuevos
+            $table->timestamps();
+            
+            // Índices para búsquedas rápidas
+            $table->index(['user_id', 'created_at']);
+            $table->index(['model', 'model_id']);
+            $table->index('action');
         });
     }
 

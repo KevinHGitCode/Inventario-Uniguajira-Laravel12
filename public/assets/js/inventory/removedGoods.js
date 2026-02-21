@@ -27,10 +27,11 @@ function initRemovedGoodsFunctions() {
 
 /**
  * Ver detalles completos de un bien dado de baja
+ * @param {number} id  - ID del registro en su tabla correspondiente
+ * @param {string} source - 'cantidad' o 'serial'
  */
-function btnViewRemovedDetails(id) {
-    // Obtener los datos del bien desde el servidor
-    fetch(`/removed/${id}`, {
+function btnViewRemovedDetails(id, source = 'cantidad') {
+    fetch(`/removed/${id}?source=${source}`, {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
@@ -131,7 +132,7 @@ function populateFilterSelects() {
  */
 function updateInventoryOptions(groupId) {
     const inventorySelect = document.getElementById('filterInventory');
-    
+
     if (!inventorySelect) return;
 
     // Guardar el valor actual del inventario
@@ -141,7 +142,7 @@ function updateInventoryOptions(groupId) {
     inventorySelect.innerHTML = '<option value="">Todos los inventarios</option>';
 
     // Filtrar inventarios por grupo
-    const filteredInventories = groupId 
+    const filteredInventories = groupId
         ? filterOptions.inventories.filter(inv => inv.group_id == groupId)
         : filterOptions.inventories;
 
@@ -173,7 +174,7 @@ function applyFilters() {
 
     // Construir query params
     const params = new URLSearchParams();
-    
+
     if (currentFilters.type && currentFilters.type !== 'all') {
         params.append('type', currentFilters.type);
     }
@@ -204,7 +205,7 @@ function applyFilters() {
             updateRemovedAssetsList(data.data);
             ocultarModal('#modalFilterRemoved');
             updateFilterButton();
-            
+
             showToast({
                 success: true,
                 message: `Filtro aplicado: ${data.count} bien(es) encontrado(s)`
@@ -249,7 +250,7 @@ function clearFilters() {
  */
 function updateRemovedAssetsList(assets) {
     const container = document.querySelector('.bienes-grid');
-    
+
     if (!container) return;
 
     if (assets.length === 0) {
@@ -263,12 +264,12 @@ function updateRemovedAssetsList(assets) {
     }
 
     container.innerHTML = assets.map(asset => {
-        const imageUrl = asset.image 
-            ? `/storage/${asset.image}` 
+        const imageUrl = asset.image
+            ? `/storage/${asset.image}`
             : '/assets/uploads/img/goods/default.jpg';
-        
-        const iconUrl = asset.type === 'Cantidad' 
-            ? '/assets/icons/bienCantidad.svg' 
+
+        const iconUrl = asset.type === 'Cantidad'
+            ? '/assets/icons/bienCantidad.svg'
             : '/assets/icons/bienSerial.svg';
 
         const quantityInfo = asset.type === 'Cantidad'
@@ -283,10 +284,13 @@ function updateRemovedAssetsList(assets) {
             minute: '2-digit'
         });
 
+        // Usar asset.source para identificar la tabla de origen correctamente
+        const source = asset.source ?? 'cantidad';
+
         return `
             <div class="bien-card card-item"
                 data-search="${asset.asset_name.toLowerCase()} ${asset.reason.toLowerCase()}"
-                onclick="btnViewRemovedDetails(${asset.id})"
+                onclick="btnViewRemovedDetails(${asset.id}, '${source}')"
                 style="cursor: pointer;">
 
                 <img
@@ -319,10 +323,10 @@ function updateRemovedAssetsList(assets) {
 function updateFilterButton() {
     const filterBtn = document.getElementById('btnOpenFilter');
     const clearBtn = document.getElementById('btnClearFilter');
-    
+
     if (!filterBtn || !clearBtn) return;
 
-    const hasActiveFilters = 
+    const hasActiveFilters =
         currentFilters.type !== 'all' ||
         currentFilters.group_id !== '' ||
         currentFilters.inventory_id !== '' ||
