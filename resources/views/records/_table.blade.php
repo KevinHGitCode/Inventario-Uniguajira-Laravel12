@@ -1,5 +1,5 @@
 {{-- ── Estadísticas ─────────────────────────────────────────────── --}}
-<div class="grid grid-cols-4 gap-4 mb-5 items-start">
+<div class="statistics_hisroty">
 
     <div class="bg-white border border-gray-200 rounded-xl p-4 h-40 flex flex-col justify-center items-center text-center">
         <p class="m-0 mb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
@@ -40,7 +40,7 @@
 </div>
 
 {{-- ── Filtros ───────────────────────────────────────────────────── --}}
-<div class="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-5">
+{{-- <div class="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-5">
     <form id="filterForm" class="row g-3 align-items-end">
 
         <div class="col-md-3">
@@ -110,7 +110,7 @@
         </div>
 
     </form>
-</div>
+</div> --}}
 
 {{-- ── Tabla de registros ───────────────────────────────────────── --}}
 <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">

@@ -1,9 +1,3 @@
-{{-- =========================
-    DETALLES DEL BIEN DADO DE BAJA
-    (Compatible con Cantidad y Serial)
-========================= --}}
-
-{{-- 1) INFORMACIÓN DEL BIEN --}}
 <div class="form-section">
     <div class="section-header">Información del Bien</div>
 

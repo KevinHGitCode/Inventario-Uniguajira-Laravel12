@@ -1,8 +1,3 @@
-{{-- =========================
-    FILTROS DE BIENES DADOS DE BAJA
-========================= --}}
-
-{{-- 1) TIPO DE BIEN --}}
 <div class="form-section">
     <div class="section-header">Tipo de Bien</div>
 

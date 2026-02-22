@@ -11,9 +11,29 @@
     min-width: 70%;
     margin: 0 auto;
 }
-  
+
 .record-th,
 .record-td {
   text-align: center;
 }
 
+.statistics_history {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 70px;
+  border: 1px solid black;
+  justify-content: space-evenly;
+}
+
+.statistics_card {
+  display: block;
+  border: 1px solid green;
+  border-radius: 5px;
+  padding: 50px;
+}
+
+.statistics_text {
+  display: grid;
+  border: 1px solid red;
+}
