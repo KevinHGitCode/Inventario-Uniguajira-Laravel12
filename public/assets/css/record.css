@@ -1,6 +1,6 @@
-/* ------------------------------------------------------------- */
-/* Estilos para las cards con las estadisticas */
-/* ------------------------------------------------------------- */
+/* ============================================================= */
+/* ESTADÍSTICAS */
+/* ============================================================= */
 
 .contenedor_statistics {
   margin-bottom: 30px;
@@ -8,14 +8,11 @@
 
 .statistics_history {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 0px;
   justify-content: space-around;
 }
 
 .statistics_card {
-  display: block;
   width: 15%;
   border: 1px solid gray;
   border-radius: 8px;
@@ -35,11 +32,12 @@
   font-size: 50px;
 }
 
-/* ------------------------------------------------------------------ */
-/* Estilos para los filtros */
-/* ------------------------------------------------------------------ */
 
-.filtro_padre{
+/* ============================================================= */
+/* FILTROS */
+/* ============================================================= */
+
+.filtro_padre {
   margin-bottom: 30px;
 }
 
@@ -74,19 +72,20 @@
   background-color: white;
 }
 
-/* ------------------------------------------------------------------ */
-/* Estilos para el botón filtrar */
-/* ------------------------------------------------------------------ */
+
+/* ============================================================= */
+/* BOTÓN */
+/* ============================================================= */
 
 .btn_contendor {
+  display: flex;
   justify-content: center;
 }
 
 .btn_filtrar {
   background-color: #A3333D;
   border-radius: 15px;
-  padding-inline: 25px;
-  padding-block: 15px;
+  padding: 15px 25px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -95,32 +94,31 @@
   font-weight: 500;
 }
 
-/* ------------------------------------------------------------------ */
-/* Estilos para la tabla */
-/* ------------------------------------------------------------------ */
+
+/* ============================================================= */
+/* TABLA */
+/* ============================================================= */
 
 .contenedor_tabla {
   display: flex;
   justify-content: center;
 }
 
-.tabla{
+.tabla {
   border: 1px solid rgb(219, 219, 219);
   border-radius: 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* ================================================================== */
-/* RESPONSIVE */
-/* ================================================================== */
 
-/* ------------------------------------------------------------------ */
-/* Nivel 1 — max-width: 1100px */
-/* ------------------------------------------------------------------ */
+/* ============================================================= */
+/* RESPONSIVE */
+/* ============================================================= */
+
+/* -------------------- <= 1100px -------------------- */
 
 @media (max-width: 1100px) {
 
-  /* Estadísticas: 2 columnas × 2 filas */
   .statistics_history {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -134,10 +132,8 @@
     box-sizing: border-box;
   }
 
-  /* Filtros (se mantienen como en el primer archivo) */
   .filtro {
     flex-wrap: wrap;
-    justify-content: center;
     gap: 15px;
   }
 
@@ -148,16 +144,7 @@
   }
 
   .btn_contendor {
-    flex: 0 0 100%;
     width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-
-  /* Tabla: ocupa todo el ancho */
-  .contenedor_tabla {
-    width: 100%;
-    box-sizing: border-box;
   }
 
   .tabla {
@@ -165,21 +152,17 @@
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Nivel 2 — max-width: 950px */
-/* ------------------------------------------------------------------ */
+
+/* -------------------- <= 950px -------------------- */
 
 @media (max-width: 950px) {
 
-  /* Estadísticas: 1 columna */
   .statistics_history {
     grid-template-columns: 1fr;
-    gap: 20px;
     padding: 10px;
   }
 
   .statistics_card {
-    width: 100%;
     padding: 20px;
   }
 
@@ -187,31 +170,10 @@
     font-size: 35px;
   }
 
-  /* Filtros (como el primer archivo) */
-  .filtro {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-  }
-
-  .filtro_container {
-    flex: 0 0 calc(50% - 10px);
-    width: calc(50% - 10px);
-    box-sizing: border-box;
-  }
-
-  .btn_contendor {
-    flex: 0 0 100%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-
-  /* TABLA (manteniendo cambios del segundo archivo) */
   .contenedor_tabla {
+    display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    display: block;
   }
 
   .tabla {
@@ -220,9 +182,8 @@
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Nivel 3 — max-width: 610px */
-/* ------------------------------------------------------------------ */
+
+/* -------------------- <= 610px -------------------- */
 
 @media (max-width: 610px) {
 
@@ -238,7 +199,6 @@
     font-size: 13px;
   }
 
-  /* Filtros (como el primer archivo) */
   .filtro_container {
     flex: 0 0 100%;
     width: 100%;
@@ -251,17 +211,5 @@
 
   .btn_filtrar {
     width: 100%;
-  }
-
-  /* TABLA (manteniendo cambios del segundo archivo) */
-  .contenedor_tabla {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    display: block;
-  }
-
-  .tabla {
-    min-width: 600px;
-    margin: 0;
   }
 }
