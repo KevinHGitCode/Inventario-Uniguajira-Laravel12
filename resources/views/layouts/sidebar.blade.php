@@ -25,7 +25,7 @@
             <li>
                 <a id="removed" href="{{ route('removed.index') }}" data-nav>
                     <img src="{{ asset('assets/icons/basura.svg') }}" alt="">
-                    <span>Bienes Dados de Baja</span>
+                    <span>Dados de Baja</span>
                 </a>
             </li>
 

@@ -25,7 +25,15 @@ class AppServiceProvider extends ServiceProvider
     {
         // ✅ Registrar evento de login
         Event::listen(Login::class, function (Login $event) {
-            ActivityLogger::login($event->user->username ?? $event->user->email);
+            if ($event->user) {
+                // Actualizar last_login_at
+                $event->user->update([
+                    'last_login_at' => now(),
+                ]);
+                
+                // Log de actividad
+                ActivityLogger::login($event->user->username ?? $event->user->email);
+            }
         });
 
         // ✅ Registrar evento de logout

@@ -137,7 +137,7 @@
                                     {{ $log->created_at->format('d/m/Y') }}
                                 </div>
                                 <div class="text-xs text-gray-400">
-                                    {{ $log->created_at->format('H:i:s') }}
+                                    {{ $log->created_at->format('g:i A') }}
                                 </div>
                             </td>
         
