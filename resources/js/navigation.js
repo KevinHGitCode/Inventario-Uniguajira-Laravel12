@@ -46,7 +46,8 @@ window.initializeScripts = (url) => {
     const scriptMap = {
         'home': 'initFormsTask',
         'goods': 'initFormsBien',
-        'groups': 'initGroupFunctions'
+        'groups': 'initGroupFunctions',
+        'records': 'initHistorialFunctions' // TODO: Crear función de inicialización para historial y agregar aquí
     };
 
     const scriptName = scriptMap[path];

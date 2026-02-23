@@ -61,7 +61,9 @@ class RecordController extends Controller
 
         // Si es AJAX, devolver solo la vista parcial
         if ($request->ajax()) {
-            return view('records._table', compact('logs', 'users', 'actions', 'models'))->render();
+            /** @var \Illuminate\View\View $view */
+            $view = view('records.index', compact('logs', 'users', 'actions', 'models'));
+            return $view->renderSections()['content'];
         }
 
         return view('records.index', compact('logs', 'users', 'actions', 'models'));
