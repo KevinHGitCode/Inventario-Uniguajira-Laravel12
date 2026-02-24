@@ -133,13 +133,12 @@
                                             <i class="fas fa-pen text-xs"></i>
                                         </button>
 
-                                        <button
-                                            class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-red-100 text-red-700 hover:bg-red-200 transition-colors duration-200"
-                                            title="Eliminar usuario"
-                                            onclick="mostrarConfirmacion({{ $user->id }})"
-                                        >
-                                            <i class="fas fa-trash text-xs"></i>
-                                        </button>
+                                        @if($user->name !== 'Administrador')
+                                            <a class="btn-eliminar"
+                                            onclick="eliminarUsuario({{ $user->id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
 
@@ -161,7 +160,6 @@
     {{-- MODALES --}}
     @include('users.modal-crear')
     @include('users.modal-editar')
-    @include('users.modal-confirmar-eliminar')
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
