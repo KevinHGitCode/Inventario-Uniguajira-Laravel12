@@ -3,14 +3,64 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white antialiased dark">
+    <body class="min-h-screen bg-white antialiased">
         <div class="relative grid h-dvh flex-col items-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
             
+            <!-- Background image -->
             <div class="absolute inset-0 z-[-20] bg-cover" style="background-image: url('{{ asset('images/fondo-uniguajira.jpeg') }}');"></div>
-            
+            <!-- Figura 1 -->
+            <div style="
+            position:absolute;
+            z-index:-1;
+            opacity:0.6;
+            top:8%;
+            left:3.5%;
+            width:525px;
+            height:230px;
+            -- border-radius:50%;
+            background-color:#000;
+            animation:float 12s ease-in-out infinite;
+            "></div>
+
+            <!-- Figura 2 -->
+            <div style="
+            position:absolute;
+            z-index:-1;
+            opacity:0.6;
+            bottom:3%;
+            right:3%;
+            width:150px;
+            height:150px;
+            border-radius:50%;
+            background-color:#a3333d;
+            animation:float 8s ease-in-out infinite;
+            "></div>
+
+            <!-- Figura 3 -->
+            <div style="
+            position:absolute;
+            z-index:-1;
+            opacity:0.6;
+            top:7%;
+            right:32%;
+            width:180px;
+            height:180px;
+            border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;
+            background-color:#ad3728;
+            animation:float 10s ease-in-out infinite;
+            "></div>
+            <!-- Animación (esto NO puede ir inline, debe ir en <style>) -->
+            <style>
+            @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+            }
+            </style>
+
             <!-- Left side -->
             <div class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800">
-                <div class="absolute inset-0 z-[-20] bg-neutral-900/45"></div>
+                <div class="absolute inset-0 z-[-20] bg-neutral-900/40"></div>
 
                 <!-- Bienvenida y Features -->
                 <div class="relative z-20 my-auto p-3 space-y-4">
@@ -63,8 +113,8 @@
 
             <!-- Right side (Login) -->
             <div class="h-full flex items-center">
-                <div class="absolute inset-0 z-[-20] bg-neutral-900/35"></div>
-                <div class="bg-neutral-900/70 mx-auto p-3 flex w-full flex-col justify-center space-y-6 sm:w-[400px] rounded-lg">
+                <div class="absolute inset-0 z-[-20] bg-neutral-900/30"></div>
+                <div class="bg-neutral-900/65 mx-auto p-3 flex w-full flex-col justify-center space-y-6 sm:w-[400px] rounded-lg">
                     <a class="z-20 flex flex-col items-center gap-2 font-medium lg:hidden">
                         <span class="flex h-9 w-9 items-center justify-center rounded-md">
                             <x-app-logo-icon />
