@@ -80,6 +80,13 @@
 
         <div class="control-actions">
 
+            {{-- Dar de baja --}}
+            <button class="control-btn"
+                    title="Dar de baja"
+                    onclick="btnDarDeBajaBienCantidad()">
+                <i class="fas fa-trash"></i>
+            </button>
+
             {{-- Cambiar cantidad --}}
             <button class="control-btn"
                     title="Cambiar cantidad"
@@ -121,11 +128,19 @@
                         data-name="{{ $asset->asset }}"
                         data-cantidad="{{ $asset->quantity }}"
                         data-type="good"
+                
                         @if ($asset->type === 'Cantidad')
                             onclick="toggleSelectItem(this)"
+                        @else
+                            onclick="loadContent('{{ route('inventory.serials', [
+                                'groupId' => $inventory->group_id,
+                                'inventoryId' => $inventory->id,
+                                'assetId' => $asset->asset_id
+                            ]) }}', { onSuccess: () => initGoodsSerialsInventoryFunctions() })"
                         @endif
                     @endif
                 >
+        
 
                     {{-- Imagen --}}
                     <img
@@ -146,28 +161,16 @@
 
                         <p><b>Cantidad:</b> {{ $asset->quantity }}</p>
                     </div>
-
-                    {{-- Detalle seriales --}}
-                    @if($asset->type === 'Serial')
-                        <div class="actions">
-                            <button class="btn-detalle"
-                                    onclick="loadContent( '{{ route('inventory.serials', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id, 'assetId' => $asset->asset_id]) }}',
-                                                            { onSuccess: () => initGoodsSerialsInventoryFunctions() } )"
-                            >
-                                <i class="fas fa-info-circle"></i>
-                            </button>
-                        </div>
-                    @endif
-
                 </div>
             @endforeach
         </div>
     @endif
 
     {{-- MODALES: responsable (separate component) --}}
-    <x-modal.good-inventory-create />
-    <x-modal.good-inventory-edit-quantity />
-    <x-modal.inventory-responsible />
+    <x-modal.inventory.good-inventory-create />
+    <x-modal.inventory.good-inventory-edit-quantity />
+    <x-modal.inventory.good-inventory-remove />
+    <x-modal.inventory.inventory-responsible />
 
     @once
         <script>

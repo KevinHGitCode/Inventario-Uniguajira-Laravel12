@@ -11,47 +11,83 @@
 
     <div class="back-and-title">
         <div class="flex flex-col">
-            <span id="good-serial-inventory-name"
-                  data-url="{{ route('inventory.serials', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id, 'assetId' => $serials[0]->asset_id]) }}"
-                  class="location">
-                Detalles - {{ $serials[0]->asset }}
-            </span>
+
+            {{-- ✅ MODIFICACIÓN:
+                Antes: data-url usaba $serials[0] (revienta si está vacío)
+                Ahora: solo lo mostramos si NO está vacío
+            --}}
+            @if(!$serials->isEmpty())
+                <span id="good-serial-inventory-name"
+                    data-url="{{ route('inventory.serials', [
+                        'groupId' => $inventory->group_id,
+                        'inventoryId' => $inventory->id,
+                        'assetId' => $serials[0]->asset_id
+                    ]) }}"
+                    class="location">
+                    Detalles - {{ $serials[0]->asset }}
+                </span>
+            @else
+                <span class="location">
+                    Detalles - Bien serial
+                </span>
+            @endif
+            {{-- ✅ FIN MODIFICACIÓN --}}
+
             <span class="location">Inventario - {{ $inventory->name }}</span>
         </div>
 
         <button class="btn-back" onclick="loadContent(
-                '{{ route( 'inventory.goods', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id]) }}',
-                            { onSuccess: () => initGoodsInventoryFunctions() })">
+                '{{ route('inventory.goods', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id]) }}',
+                { onSuccess: () => initGoodsInventoryFunctions() })">
             <i class="fas fa-arrow-left me-2"></i>
             <span>Volver</span>
         </button>
     </div>
 
-    <x-generals.top-bar
-        id="searchGoodsSerialsInventory"
-        placeholder="Buscar bien serial..."
-        canCreate="false"
-    />
-
-
     {{-- barra de control --}}
-    <div id="control-bar-serial-good" class="control-bar">
-        <div class="selected-name">1 seleccionado</div>
-        <div class="control-actions">
-            <button class="control-btn" title="Editar" onclick="btnEditarBienSerial()">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="control-btn" title="Eliminar" onclick="btnEliminarBienSerial()">
-                <i class="fas fa-trash"></i>
-            </button>
+    {{-- ✅ MODIFICACIÓN:
+        Si está vacío, NO mostramos la barra porque no hay nada seleccionable.
+    --}}
+    @if(!$serials->isEmpty())
+        <div id="control-bar-serial-good" class="control-bar">
+            <div class="selected-name">1 seleccionado</div>
+            <div class="control-actions">
+                <button class="control-btn" title="Dar de baja" onclick="btnDarDeBajaBienSerial()">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="control-btn" title="Editar" onclick="btnEditarBienSerial()">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="control-btn" title="Eliminar" onclick="btnEliminarBienSerial()">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </div>
-    </div>
+    @endif
+    {{-- ✅ FIN MODIFICACIÓN --}}
 
     @if($serials->isEmpty())
         <div class="empty-state">
             <i class="fas fa-box-open fa-3x"></i>
             <p>No hay bienes seriales disponibles.</p>
         </div>
+
+        {{-- ✅ MODIFICACIÓN:
+            Si quedó vacío (ej: eliminaste el último),
+            redirigimos automáticamente al inventario general (goods-inventory)
+        --}}
+        @once
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    loadContent(
+                        "{{ route('inventory.goods', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id]) }}",
+                        { onSuccess: () => initGoodsInventoryFunctions() }
+                    );
+                });
+            </script>
+        @endonce
+        {{-- ✅ FIN MODIFICACIÓN --}}
+
     @else
         <div class="bienes-grid">
             @foreach($serials as $serial)
@@ -78,7 +114,7 @@
 
                     <div class="bien-info">
                         <h3 class="name-item">
-                            <span class="hidden">{{$serial->serial}}</span>
+                            <span class="hidden">{{ $serial->serial }}</span>
                             {{ $serial->asset }}
                             <img
                                 src="{{ asset('assets/icons/bienSerial.svg') }}"
@@ -96,7 +132,8 @@
     @endif
 
     {{-- MODALES --}}
-    <x-modal.good-inventory-edit-serial />
+    <x-modal.inventory.good-inventory-edit-serial />
+    <x-modal.inventory.good-inventory-remove-serial />
 
     @once
         <script>

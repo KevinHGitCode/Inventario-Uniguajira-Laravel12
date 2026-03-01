@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Asset;
 use App\Models\AssetInventory;
 use Illuminate\Support\Facades\Storage;
+use App\Helpers\ActivityLogger;
 
 class GoodsController extends Controller
 {
@@ -20,8 +21,9 @@ class GoodsController extends Controller
 
         if ($request->ajax()) {
             // si es una carga AJAX, solo renderiza el contenido interno
-            return view('goods.index', compact('dataGoods'))
-                ->renderSections()['content'];
+            /** @var \Illuminate\View\View $view */
+            $view = view('goods.index', compact('dataGoods'));
+            return $view->renderSections()['content'];
         }
 
         // si es carga normal (primera vez), usa el layout completo
@@ -45,6 +47,8 @@ class GoodsController extends Controller
      */
     public function store(Request $request)
     {
+        abort_if(auth()->user()->role !== 'administrador', 403);
+
         $request->validate([
             'nombre' => 'required|string|max:255|unique:assets,name',
             'tipo'   => 'required|integer|in:1,2',
@@ -59,9 +63,12 @@ class GoodsController extends Controller
 
         $asset = Asset::create([
             'name'  => $request->nombre,
-            'type'  => $request->tipo,
+            'type'  => $request->tipo == 1 ? 'Cantidad' : 'Serial',
             'image' => $path
         ]);
+
+        // ✅ Registrar actividad
+        ActivityLogger::created(Asset::class, $asset->id, $asset->name);
 
         return response()->json([
             'success' => true,
@@ -75,13 +82,21 @@ class GoodsController extends Controller
      */
     public function update(Request $request)
     {
+        abort_if(auth()->user()->role !== 'administrador', 403);
+
+        $asset = Asset::findOrFail($request->id);
+
         $request->validate([
             'id'     => 'required|integer|exists:assets,id',
             'nombre' => 'required|string|max:255|unique:assets,name,' . $asset->id,
             'imagen' => 'nullable|image|max:2048'
         ]);
 
-        $asset = Asset::findOrFail($request->id);
+        // ✅ Guardar valores anteriores
+        $oldValues = [
+            'name' => $asset->name,
+            'image' => $asset->image,
+        ];
 
         // Procesar imagen si viene una nueva
         if ($request->hasFile('imagen')) {
@@ -99,6 +114,18 @@ class GoodsController extends Controller
 
         $asset->save();
 
+        // ✅ Registrar actividad
+        ActivityLogger::updated(
+            Asset::class,
+            $asset->id,
+            $asset->name,
+            $oldValues,
+            [
+                'name' => $asset->name,
+                'image' => $asset->image,
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Bien actualizado correctamente.'
@@ -110,6 +137,8 @@ class GoodsController extends Controller
      */
     public function destroy(string $id)
     {
+        abort_if(auth()->user()->role !== 'administrador', 403);
+
         $asset = Asset::find($id);
 
         if (!$asset) {
@@ -136,12 +165,17 @@ class GoodsController extends Controller
             ], 400);
         }
 
+        $assetName = $asset->name; // Guardar antes de eliminar
+
         // Eliminar imagen
         if ($asset->image && Storage::disk('public')->exists($asset->image)) {
             Storage::disk('public')->delete($asset->image);
         }
 
         $asset->delete();
+
+        // ✅ Registrar actividad
+        ActivityLogger::deleted(Asset::class, $id, $assetName);
 
         return response()->json([
             'success' => true,
@@ -161,6 +195,8 @@ class GoodsController extends Controller
      */
     public function batchCreate(Request $request)
     {
+        abort_if(auth()->user()->role !== 'administrador', 403);
+
         try {
             $goods = $request->input('goods', []);
 
@@ -173,6 +209,7 @@ class GoodsController extends Controller
 
             $created = 0;
             $errors = [];
+            $createdAssets = []; // Para registrar en el log
 
             foreach ($goods as $index => $good) {
                 try {
@@ -207,17 +244,31 @@ class GoodsController extends Controller
                     }
 
                     // Crear el bien
-                    Asset::create([
+                    $asset = Asset::create([
                         'name' => $good['nombre'],
                         'type' => (int)$good['tipo'] === 1 ? 'Cantidad' : 'Serial',
                         'image' => $imagePath
                     ]);
 
+                    $createdAssets[] = $asset->name;
                     $created++;
 
                 } catch (\Exception $e) {
                     $errors[] = "Fila {$index}: {$e->getMessage()}";
                 }
+            }
+
+            // ✅ Registrar actividad masiva
+            if ($created > 0) {
+                ActivityLogger::custom(
+                    'batch_create',
+                    "Creó {$created} bien(es) mediante carga masiva: " . implode(', ', array_slice($createdAssets, 0, 5)) . ($created > 5 ? '...' : ''),
+                    [
+                        'model' => 'Asset',
+                        'count' => $created,
+                        'assets' => $createdAssets,
+                    ]
+                );
             }
 
             $message = "Se crearon {$created} bien(es) exitosamente.";
@@ -271,7 +322,7 @@ class GoodsController extends Controller
     {
         if ($request->ajax()) {
             // si es una carga AJAX, solo renderiza el contenido interno
-            return view('goods.excel-upload')
+            return view('components.modal.goods.excel-upload')
                 ->renderSections()['content'];
         }
 

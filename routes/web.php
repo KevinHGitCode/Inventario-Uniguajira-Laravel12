@@ -1,5 +1,10 @@
 <?php
 
+// bloquea cualquier acceso público a /register sin depender solo de Fortify
+Route::match(['get','post'], 'register', function () {
+    abort(404);
+})->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     HomeController,
@@ -11,105 +16,199 @@ use App\Http\Controllers\{
     ReportController,
     UserController,
     RecordController,
-    ReportFolderController
+    ReportFolderController,
+    RemovedController,
 };
 
-// Redirect to home
-Route::get('/', function () {
-    return redirect()->route('home.index');
+/**
+ * Orden de las rutas:
+ * 1. Home
+ * 2. Tareas
+ * 3. Bienes
+ * 4. Excel upload
+ * 5. Grupos
+ * 6. Inventarios
+ * 7. Bienes inventario
+ * 8. Bienes serial inventario
+ * 9. Dados de baja
+ * 10. Carpetas
+ * 11. Reportes
+ * 12. Usuarios
+ * 13. Historial
+ * 14. Perfil
+ */
+
+
+/**
+ * 1. Home
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('home', [HomeController::class, 'index'])->middleware(['auth', 'verified'])->name('home.index');
+
+Route::get('/', function () { return redirect()->route('home.index'); });
+
+
+/**
+ * 2. Tareas
+ * ----------------------------------------------------------------------------
+ */
+
+Route::prefix('api/tasks')->group(function () {
+    Route::patch('toggle', [TaskController::class, 'toggle']);
+    Route::delete('delete/{id}', [TaskController::class, 'destroy']);
+    Route::post('store', [TaskController::class, 'store'])->name('tasks.store');
+    Route::put('update', [TaskController::class, 'update'])->name('tasks.update');
 });
 
-// Home routes
-Route::get('home', [HomeController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('home.index');
 
-// Profile routes
-Route::get('profile', function () {
-    return 'Profile route';
-})->name('profile');
+/**
+ * 3. Bienes
+ * ----------------------------------------------------------------------------
+ */
 
-// Rutas de navegacion
-Route::middleware('auth')->group(function () {
-    // General routes
-    Route::get('goods', [GoodsController::class, 'index'])->name('goods.index');
-    Route::get('reports', [ReportFolderController::class, 'index'])->name('reports.index');
-    Route::get('users', [UserController::class, 'index'])->name('users.index');
-    Route::get('records', [RecordController::class, 'index'])->name('records.index');
+Route::get('goods', [GoodsController::class, 'index'])->name('goods.index');
 
-    // Group routes
-    Route::get('/groups', [GroupController::class, 'index'])->name('inventory.groups');
-
-    // Inventory routes
-    Route::controller(InventoryController::class)->group(function () {
-        Route::get('/group/{groupId}', 'index')->name('inventory.inventories');
-        Route::get('/group/{groupId}/inventory/{inventoryId}/goods/{assetId}/serials', 'serialsIndex')->name('inventory.serials');
-    });
-
-    Route::get('/group/{groupId}/inventory/{inventoryId}', [GoodsInventoryController::class, 'goodsIndex'])->name('inventory.goods');
-
-    // Ruta para la vista de subida de Excel
-    Route::get('/goods/excel-upload', [GoodsController::class, 'excelUploadView'])->name('goods.excel-upload');
-
-    // Reports routes
-    Route::get('reports/folder/{folderId}', [ReportFolderController::class, 'show'])
-    ->name('reports.folder');
+Route::prefix('api/goods')->group(function () {
+    Route::post('create', [GoodsController::class, 'store'])->name('goods.store');
+    Route::post('batchCreate', [GoodsController::class, 'batchCreate'])->name('goods.batchCreate');
+    Route::post('update', [GoodsController::class, 'update'])->name('goods.update');
+    Route::delete('delete/{id}', [GoodsController::class, 'destroy'])->name('goods.destroy');
+    Route::get('get/json', [GoodsController::class, 'getJson']);
 });
 
-// API routes
-Route::prefix('api')->middleware('auth')->group(function () {
-    // Tasks API
-    Route::prefix('tasks')->group(function () {
-        Route::patch('toggle', [TaskController::class, 'toggle']);
-        Route::delete('delete/{id}', [TaskController::class, 'destroy']);
-        Route::post('store', [TaskController::class, 'store'])->name('tasks.store');
-        Route::put('update', [TaskController::class, 'update'])->name('tasks.update');
-    });
 
-    // Goods API
-    Route::prefix('goods')->group(function () {
-        Route::post('create', [GoodsController::class, 'store'])->name('goods.store');
-        Route::post('batchCreate', [GoodsController::class, 'batchCreate'])->name('goods.batchCreate');
-        Route::post('update', [GoodsController::class, 'update'])->name('goods.update');
-        Route::delete('delete/{id}', [GoodsController::class, 'destroy'])->name('goods.destroy');
-        Route::get('get/json', [GoodsController::class, 'getJson']);
-        Route::get('download-template', [GoodsController::class, 'downloadTemplate'])->name('goods.download-template');
-    });
+/**
+ * 4. Excel upload
+ * ----------------------------------------------------------------------------
+ */
 
-    // Groups API
-    Route::prefix('groups')->group(function () {
-        Route::post('create', [GroupController::class, 'store'])->name('groups.create');
-        Route::post('rename', [GroupController::class, 'update'])->name('groups.rename');
-        Route::delete('delete/{id}', [GroupController::class, 'destroy'])->name('groups.delete');
-    });
+Route::get('/goods/excel-upload', [GoodsController::class, 'excelUploadView'])->name('goods.excel-upload');
 
-    // Inventories API
-    Route::prefix('inventories')->group(function () {
-        Route::post('create', [InventoryController::class, 'create'])->name('inventories.create');
-        Route::post('rename', [InventoryController::class, 'rename'])->name('inventories.rename');
-        Route::post('updateResponsable', [InventoryController::class, 'updateResponsable'])->name('inventories.updateResponsable');
-        Route::post('updateEstado', [InventoryController::class, 'updateEstado'])->name('inventories.updateEstado');
-        Route::delete('delete/{id}', [InventoryController::class, 'delete'])->name('inventories.delete');
-    });
+Route::get('api/goods/download-template', [GoodsController::class, 'downloadTemplate'])->name('goods.download-template');
 
-    Route::prefix('goods-inventory')->group(function () {
 
-        // Crear bien en inventario
-        Route::post('/create', [GoodsInventoryController::class, 'store']);
+/**
+ * 5. Grupos
+ * ----------------------------------------------------------------------------
+ */
 
-        // Actualizar cantidad
-        Route::post('/update-quantity', [GoodsInventoryController::class, 'updateQuantity']);
+Route::get('/groups', [GroupController::class, 'index'])->name('inventory.groups');
 
-        // Eliminar bien de tipo cantidad
-        Route::delete('/delete-quantity/{inventoryId}/{goodId}', [GoodsInventoryController::class, 'deleteQuantity']);
-
-        // Eliminar bien de tipo serial
-        Route::delete('/delete-serial/{equipment}', [GoodsInventoryController::class, 'deleteSerial']);
-
-        // Actualizar bien de tipo serial
-        Route::post('/update-serial', [GoodsInventoryController::class, 'updateSerial'])
-            ->name('goods-inventory.update-serial');
-
-    });
+Route::prefix('api/groups')->group(function () {
+    Route::post('create', [GroupController::class, 'store'])->name('groups.create');
+    Route::post('rename', [GroupController::class, 'update'])->name('groups.rename');
+    Route::delete('delete/{id}', [GroupController::class, 'destroy'])->name('groups.delete');
 });
+
+
+/**
+ * 6. Inventarios
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('/group/{groupId}', [InventoryController::class, 'index'])->name('inventory.inventories');
+
+Route::prefix('api/inventories')->group(function () {
+    Route::post('create', [InventoryController::class, 'create'])->name('inventories.create');
+    Route::post('rename', [InventoryController::class, 'rename'])->name('inventories.rename');
+    Route::post('updateResponsable', [InventoryController::class, 'updateResponsable'])->name('inventories.updateResponsable');
+    Route::post('updateEstado', [InventoryController::class, 'updateEstado'])->name('inventories.updateEstado');
+    Route::delete('delete/{id}', [InventoryController::class, 'delete'])->name('inventories.delete');
+});
+
+
+/**
+ * 7. Bienes inventario
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('/group/{groupId}/inventory/{inventoryId}', [GoodsInventoryController::class, 'goodsIndex'])->name('inventory.goods');
+
+Route::prefix('api/goods-inventory')->group(function () {
+    Route::post('/create', [GoodsInventoryController::class, 'store']);
+    Route::post('/update-quantity', [GoodsInventoryController::class, 'updateQuantity']);
+    Route::delete('/delete-quantity/{inventoryId}/{goodId}', [GoodsInventoryController::class, 'deleteQuantity']);
+    Route::delete('/delete-serial/{equipment}', [GoodsInventoryController::class, 'deleteSerial']);
+    Route::post('/update-serial', [GoodsInventoryController::class, 'updateSerial'])->name('goods-inventory.update-serial');
+    Route::post('/remove-good', [GoodsInventoryController::class, 'removeGood']);
+    Route::post('/remove-good-serial', [GoodsInventoryController::class, 'removeGoodSerial']);
+});
+
+
+/**
+ * 8. Bienes serial inventario
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('/group/{groupId}/inventory/{inventoryId}/goods/{assetId}/serials', [InventoryController::class, 'serialsIndex'])->name('inventory.serials');
+
+
+/**
+ * 9. Dados de baja
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('removed', [RemovedController::class, 'index'])->name('removed.index');
+
+Route::get('removed/{id}', [RemovedController::class, 'show'])->name('removed.show');
+
+Route::prefix('api/removed')->group(function () {
+    Route::get('/filter', [RemovedController::class, 'filter'])->name('removed.filter');
+    Route::get('/filter-options', [RemovedController::class, 'filterOptions'])->name('removed.filter-options');
+    Route::get('/export', [RemovedController::class, 'export'])->name('removed.export');
+    Route::get('/stats', [RemovedController::class, 'stats'])->name('removed.stats');
+    Route::delete('/{id}', [RemovedController::class, 'destroy'])->name('removed.destroy');
+});
+
+
+/**
+ * 10. Carpetas
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('reports', [ReportFolderController::class, 'index'])->name('reports.index');
+
+
+/**
+ * 11. Reportes
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('reports/folder/{folderId}', [ReportFolderController::class, 'show'])->name('reports.folder');
+
+
+/**
+ * 12. Usuarios
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('users', [UserController::class, 'index'])->name('users.index');
+
+Route::prefix('api/users')->group(function () {
+    Route::post('store', [UserController::class, 'store'])->name('users.store');
+    Route::post('update', [UserController::class, 'update'])->name('users.update');
+    Route::delete('delete/{id}', [UserController::class, 'destroy']);
+});
+
+
+/**
+ * 13. Historial
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('records', [RecordController::class, 'index'])->name('records.index');
+
+Route::prefix('api/records')->group(function () {
+    Route::delete('clean', [RecordController::class, 'clean'])->name('records.clean');
+    Route::get('export', [RecordController::class, 'export'])->name('records.export');
+});
+
+
+/**
+ * 14. Perfil
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('profile', function () { return 'Profile route'; })->name('profile');
 

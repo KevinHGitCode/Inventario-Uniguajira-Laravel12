@@ -22,6 +22,8 @@
 
     <main id="main">
         <div id="toastContainer" class="toast-container"></div>
+        {{-- loader shown while AJAX content loads --}}
+        <div id="loader" class="loader"></div>
         <div id="main-content">
             @yield('content')
         </div>
@@ -58,7 +60,8 @@
     <script src="{{ asset('assets/js/inventory/formGoodInventory.js') }}"></script>
     <script src="{{ asset('assets/js/reports/folders.js') }}"></script>
     <script src="{{ asset('assets/js/reports/reports.js') }}"></script>
-    <script src="{{ asset('assets/js/historial.js') }}"></script>
+    <script src="{{ asset('assets/js/records/historial.js') }}"></script>
+    <script src="{{ asset('assets/js/inventory/removedGoods.js') }}"></script>  {{-- ✅ AGREGADO --}}
     {{-- <script src="{{ asset('assets/js/onLoaded.js') }}"></script> --}}
     @stack('scripts')
 </body>

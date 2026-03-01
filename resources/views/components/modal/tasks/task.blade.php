@@ -40,6 +40,7 @@
                 <input type="date"
                        id="{{ $mode === 'create' ? 'taskDate' : 'editTaskDate' }}"
                        name="date"
+                       min="{{ now()->format('Y-m-d') }}"
                        value="{{ now()->format('Y-m-d') }}">
             </div>
 
@@ -52,7 +53,7 @@
     </div>
 </div>
 
-{{-- 🔽 Agregamos este bloque --}}
+{{-- 📽 Agregamos este bloque --}}
 @once
     <script>
         document.addEventListener('DOMContentLoaded', () => {

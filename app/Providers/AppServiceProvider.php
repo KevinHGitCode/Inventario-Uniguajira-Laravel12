@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+use App\Helpers\ActivityLogger;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // ✅ Registrar evento de login
+        Event::listen(Login::class, function (Login $event) {
+            if ($event->user) {
+                // Actualizar last_login_at
+                $event->user->update([
+                    'last_login_at' => now(),
+                ]);
+                
+                // Log de actividad
+                ActivityLogger::login($event->user->username ?? $event->user->email);
+            }
+        });
+
+        // ✅ Registrar evento de logout
+        Event::listen(Logout::class, function (Logout $event) {
+            if ($event->user) {
+                ActivityLogger::logout($event->user->username ?? $event->user->email);
+            }
+        });
     }
 }
