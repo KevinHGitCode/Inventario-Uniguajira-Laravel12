@@ -68,7 +68,9 @@ function initGoodsInventoryFunctions() {
         }
     });
 
-    initAutocompleteForBien();
+    if (typeof initAutocompleteForBien === 'function') {
+        initAutocompleteForBien();
+    }
 
     // Inicializa la búsqueda de bienes en el inventario
     iniciarBusqueda('searchGoodInventory');

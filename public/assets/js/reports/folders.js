@@ -62,6 +62,7 @@ function abrirCarpeta(idFolder, scrollUpRequired = true) {
     currentFolderId = idFolder;
 
     const divFolders = document.getElementById('folders');
+    const foldersTopbar = document.getElementById('folders-topbar');
     const divReports = document.getElementById('report-content');
     const divContent = document.getElementById('report-content-item');
     const folderTitle = document.getElementById('folder-name');
@@ -75,6 +76,7 @@ function abrirCarpeta(idFolder, scrollUpRequired = true) {
 
     updateAllFolderIdFields(idFolder);
     divContent.innerHTML = '<p>Cargando reportes...</p>';
+    if (foldersTopbar) foldersTopbar.classList.add('hidden');
     divFolders.classList.add('hidden');
     divReports.classList.remove('hidden');
 
@@ -106,10 +108,12 @@ function cerrarCarpeta() {
 
     const reportContent = document.getElementById('report-content');
     const folders = document.getElementById('folders');
+    const foldersTopbar = document.getElementById('folders-topbar');
     const reportContentItem = document.getElementById('report-content-item');
 
     if (reportContent) reportContent.classList.add('hidden');
     if (folders) folders.classList.remove('hidden');
+    if (foldersTopbar) foldersTopbar.classList.remove('hidden');
     if (reportContentItem) reportContentItem.innerHTML = '';
 }
 

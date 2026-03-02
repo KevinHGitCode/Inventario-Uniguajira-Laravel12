@@ -20,35 +20,43 @@
 
                         {{-- MALO = 3 --}}
                         <div class="light light-red {{ $inventory->conservation_status == 'bad' ? 'active' : 'inactive' }}"
-                            onclick="
-                                this.closest('form').estado.value='3';
-                                this.closest('form').querySelector('button[type=submit]').click();
-                            "
+                            @if(Auth::user()->role === 'administrador')
+                                onclick="
+                                    this.closest('form').estado.value='3';
+                                    this.closest('form').querySelector('button[type=submit]').click();
+                                "
+                            @endif
                             title="Mal estado"></div>
 
                         {{-- REGULAR = 2 --}}
                         <div class="light light-yellow {{ $inventory->conservation_status == 'regular' ? 'active' : 'inactive' }}"
-                            onclick="
-                                this.closest('form').estado.value='2';
-                                this.closest('form').querySelector('button[type=submit]').click();
-                            "
+                            @if(Auth::user()->role === 'administrador')
+                                onclick="
+                                    this.closest('form').estado.value='2';
+                                    this.closest('form').querySelector('button[type=submit]').click();
+                                "
+                            @endif
                             title="Estado regular"></div>
 
                         {{-- BUENO = 1 --}}
                         <div class="light light-green {{ $inventory->conservation_status == 'good' ? 'active' : 'inactive' }}"
-                            onclick="
-                                this.closest('form').estado.value='1';
-                                this.closest('form').querySelector('button[type=submit]').click();
-                            "
+                            @if(Auth::user()->role === 'administrador')
+                                onclick="
+                                    this.closest('form').estado.value='1';
+                                    this.closest('form').querySelector('button[type=submit]').click();
+                                "
+                            @endif
                             title="Buen estado"></div>
 
                     </div>
 
                     <button type="submit" style="display:none"></button>
                 </form>
-                <button class="edit-btn" onclick="btnEditarResponsable()" title="Editar responsable">
-                    <i class="fas fa-user-edit"></i>
-                </button>
+                @if(Auth::user()->role === 'administrador')
+                    <button class="edit-btn" onclick="btnEditarResponsable()" title="Editar responsable">
+                        <i class="fas fa-user-edit"></i>
+                    </button>
+                @endif
             </div>
         </div>
     </div>

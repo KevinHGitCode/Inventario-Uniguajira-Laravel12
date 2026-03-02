@@ -41,14 +41,14 @@
     <script src="{{ asset('assets/js/helpers/delete.js') }}"></script>
     <script src="{{ asset('assets/js/helpers/search.js') }}"></script>
     <script src="{{ asset('assets/js/helpers/toast.js') }}"></script>
+    <script src="{{ asset('assets/js/helpers/modal.js') }}"></script>
+    <script src="{{ asset('assets/js/helpers/selection.js') }}"></script>
+    <script src="{{ asset('assets/js/helpers/autocomplete.js') }}"></script>
     <script src="{{ asset('assets/js/tasks.js') }}"></script>
 
     @if(Auth::user()->role === 'administrador')
         <script src="{{ asset('assets/js/goods.js') }}"></script>
         <script src="{{ asset('assets/js/goods-excel-upload.js') }}"></script>
-        <script src="{{ asset('assets/js/helpers/modal.js') }}"></script>
-        <script src="{{ asset('assets/js/helpers/selection.js') }}"></script>
-        <script src="{{ asset('assets/js/helpers/autocomplete.js') }}"></script>
     @endif
 
     <script src="{{ asset('assets/js/user.js') }}"></script>

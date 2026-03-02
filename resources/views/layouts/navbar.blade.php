@@ -22,16 +22,18 @@
     </div>
 </header>
 
-<div class="user-menu">
+<div class="user-menu" style="min-width: 200px;">
     <div id="userMenu" class="user-menu-content hidden">
-        <button class="user-menu-item" onclick="toggleUserMenu(); window.location='{{ route('profile') }}'">
+        <button class="user-menu-item"
+            onclick="btnEditarUser(this)"
+            data-id="{{ auth()->user()->id }}"
+            data-nombre="{{ auth()->user()->name }}"
+            data-nombre-usuario="{{ auth()->user()->username }}"
+            data-email="{{ auth()->user()->email }}"
+            data-role="{{ auth()->user()->role }}"
+        >
             <img class="user-menu-icon" src="{{ asset('assets/icons/editarPerfil.svg') }}" alt="edit">
-            <span>Editar Perfil</span>
-        </button>
-
-        <button class="user-menu-item" onclick="mostrarModal('#modalCambiarContraseña')">
-            <img class="user-menu-icon" src="{{ asset('assets/icons/cambiarContraseña.svg') }}" alt="password">
-            <span>Cambiar Contraseña</span>
+            <span>Editar Usuario</span>
         </button>
 
         <form action="{{ route('logout') }}" method="POST" onclick="logout()">

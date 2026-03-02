@@ -6,11 +6,13 @@
 <div class="container content">
     <h1>Carpetas</h1>
 
-    <x-generals.top-bar
-        id="searchFolder"
-        placeholder="Buscar carpeta"
-        :modal="Auth::user()->role === 'administrador' ? '#modalCrearCarpeta' : null"
-    />
+    <div id="folders-topbar">
+        <x-generals.top-bar
+            id="searchFolder"
+            placeholder="Buscar carpeta"
+            :modal="Auth::user()->role === 'administrador' ? '#modalCrearCarpeta' : null"
+        />
+    </div>
 
     @if(Auth::user()->role === 'administrador')
         <div id="control-bar-folder" class="control-bar">
@@ -77,31 +79,33 @@
 
         <x-generals.top-bar id="searchReport" placeholder="Buscar reporte" canCreate="false" />
 
-        <div class="report-options-panel">
-            <div class="report-option-box">
-                <h3>Generar</h3>
-                <ul class="report-generation-list">
-                    <li onclick="mostrarModalReporte('#modalCrearReporteInventario')">
-                        <i class="fas fa-arrow-right"></i> reporte de un inventario
-                    </li>
-                    <li onclick="mostrarModalReporte('#modalCrearReporteGrupo')">
-                        <i class="fas fa-arrow-right"></i> reporte de un grupo
-                    </li>
-                    <li onclick="mostrarModalReporte('#modalCrearReporteTodos')">
-                        <i class="fas fa-arrow-right"></i> reporte de todos los inventarios
-                    </li>
-                    <li onclick="mostrarModalReporte('#modalCrearReporteBienes')">
-                        <i class="fas fa-arrow-right"></i> reporte de bienes
-                    </li>
-                    <li onclick="mostrarModalReporte('#modalCrearReporteEquipos')">
-                        <i class="fas fa-arrow-right"></i> reporte de equipos
-                    </li>
-                    <li onclick="mostrarModalReporte('#modalCrearReporteDadosDeBaja')">
-                        <i class="fas fa-arrow-right"></i> reporte de dados de baja
-                    </li>
-                </ul>
+        @if(Auth::user()->role === 'administrador')
+            <div class="report-options-panel">
+                <div class="report-option-box">
+                    <h3>Generar</h3>
+                    <ul class="report-generation-list">
+                        <li onclick="mostrarModalReporte('#modalCrearReporteInventario')">
+                            <i class="fas fa-arrow-right"></i> reporte de un inventario
+                        </li>
+                        <li onclick="mostrarModalReporte('#modalCrearReporteGrupo')">
+                            <i class="fas fa-arrow-right"></i> reporte de un grupo
+                        </li>
+                        <li onclick="mostrarModalReporte('#modalCrearReporteTodos')">
+                            <i class="fas fa-arrow-right"></i> reporte de todos los inventarios
+                        </li>
+                        <li onclick="mostrarModalReporte('#modalCrearReporteBienes')">
+                            <i class="fas fa-arrow-right"></i> reporte de bienes
+                        </li>
+                        <li onclick="mostrarModalReporte('#modalCrearReporteEquipos')">
+                            <i class="fas fa-arrow-right"></i> reporte de equipos
+                        </li>
+                        <li onclick="mostrarModalReporte('#modalCrearReporteDadosDeBaja')">
+                            <i class="fas fa-arrow-right"></i> reporte de dados de baja
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
+        @endif
 
         @if(Auth::user()->role === 'administrador')
             <div id="control-bar-report" class="control-bar">

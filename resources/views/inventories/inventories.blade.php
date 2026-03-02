@@ -55,10 +55,12 @@
 
             @foreach ($inventories as $inventory)
                 <div class="card card-item"
-                    data-id="{{ $inventory->id }}"
-                    data-name="{{ $inventory->name }}"
-                    data-type="inventory"
-                    onclick="toggleSelectItem(this)"
+                    @if(Auth::user()->role === 'administrador')
+                        data-id="{{ $inventory->id }}"
+                        data-name="{{ $inventory->name }}"
+                        data-type="inventory"
+                        onclick="toggleSelectItem(this)"
+                    @endif
                 >
 
                     {{-- Icono --}}

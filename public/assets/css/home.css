@@ -1,0 +1,63 @@
+.consultor-home {
+    margin-top: 20px;
+}
+
+.consultor-home-hero {
+    background: linear-gradient(135deg, #f2f7ff 0%, #e7f0ff 100%);
+    border: 1px solid #d4e3ff;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.consultor-home-hero p {
+    margin: 8px 0 0;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.consultor-home-grid {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.consultor-home-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06);
+}
+
+.consultor-home-card i {
+    color: #1d4ed8;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.consultor-home-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #111827;
+}
+
+.consultor-home-card p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+    .consultor-home-hero {
+        padding: 16px;
+    }
+
+    .consultor-home-grid {
+        gap: 12px;
+    }
+
+    .consultor-home-card {
+        padding: 16px;
+    }
+}
