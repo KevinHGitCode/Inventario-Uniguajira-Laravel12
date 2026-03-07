@@ -24,6 +24,12 @@ if [ ! -L "public/storage" ]; then
     php artisan storage:link --relative || php artisan storage:link || true
 fi
 
+# Publicar imagenes seed en /assets/seeders/*
+if [ -d "storage/app/seeders" ]; then
+    mkdir -p public/assets/seeders
+    cp -R storage/app/seeders/. public/assets/seeders/ || true
+fi
+
 # Exponer imagenes seedeadas con la ruta /storage/seeders/*
 if [ ! -e "storage/app/public/seeders" ]; then
     ln -s ../seeders storage/app/public/seeders || true

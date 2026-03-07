@@ -52,9 +52,9 @@
 
                     {{-- Imagen --}}
                     <img
-                        src="{{ asset('storage/' . ($asset->image ?? 'assets/uploads/img/goods/default.jpg')) }}"
+                        src="{{ !empty($asset->image) ? (str_starts_with($asset->image, 'seeders/') ? asset('assets/' . $asset->image) : asset('storage/' . $asset->image)) : asset('assets/defaults/goods/default.jpg') }}"
                         class="bien-image"
-                        onerror="this.src='{{ asset('assets/uploads/img/goods/default.jpg') }}'"
+                        onerror="this.src='{{ asset('assets/defaults/goods/default.jpg') }}'"
                     />
 
                     {{-- Info --}}
