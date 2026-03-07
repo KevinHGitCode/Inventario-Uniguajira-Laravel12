@@ -4,7 +4,7 @@ set -e
 echo "📦 Iniciando contenedor Laravel..."
 
 # Crear las carpetas necesarias de Laravel y asignar permisos
-mkdir -p storage/framework/{sessions,views,cache} storage/app/private bootstrap/cache
+mkdir -p storage/framework/{sessions,views,cache} storage/app/private storage/app/public bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache || true
 chmod -R 775 storage bootstrap/cache || true
 
@@ -21,8 +21,12 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
 fi
 # Regenerar symlink de storage si no existe
 if [ ! -L "public/storage" ]; then
-	php artisan storage:link --relative || true
-	ln -s ../../seeders storage/app/public/seeders
+    php artisan storage:link --relative || php artisan storage:link || true
+fi
+
+# Exponer imagenes seedeadas con la ruta /storage/seeders/*
+if [ ! -e "storage/app/public/seeders" ]; then
+    ln -s ../seeders storage/app/public/seeders || true
 fi
 
 # Iniciar PHP-FPM y Nginx
