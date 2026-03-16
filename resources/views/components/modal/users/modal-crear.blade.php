@@ -29,7 +29,7 @@
                     <div>
                         <label for="create-password" class="form-label">Contraseña:</label>
                         <input type="password" id="create-password" name="password"
-                            class="form-input" placeholder="Mínimo 6 caracteres" required />
+                            class="form-input" placeholder="Mínimo 6 caracteres" minlength="6" required />
                     </div>
                     <div>
                         <label for="create-role" class="form-label">Rol:</label>
