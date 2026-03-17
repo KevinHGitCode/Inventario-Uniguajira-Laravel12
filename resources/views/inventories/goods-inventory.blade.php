@@ -82,6 +82,15 @@
     />
 
     @if(Auth::user()->role === 'administrador')
+    <div style="display:flex; justify-content:flex-end; margin-bottom: 0.5rem;">
+        <button class="btn create-btn" onclick="btnAbrirModalExcelInventario()" title="Cargar bienes desde Excel"
+        style="background-color: #1B5E20; ">
+            <i class="fas fa-file-excel"></i> Cargar Excel
+        </button>
+    </div>
+    @endif
+
+    @if(Auth::user()->role === 'administrador')
     {{-- Barra de control para bienes --}}
     <div id="control-bar-good" class="control-bar">
         <div class="selected-name">1 seleccionado</div>
@@ -175,11 +184,12 @@
         </div>
     @endif
 
-    {{-- MODALES: responsable (separate component) --}}
+    {{-- MODALES --}}
     <x-modal.inventory.good-inventory-create />
     <x-modal.inventory.good-inventory-edit-quantity />
     <x-modal.inventory.good-inventory-remove />
     <x-modal.inventory.inventory-responsible />
+    <x-modal.inventory.good-inventory-excel-upload />
 
     @once
         <script>

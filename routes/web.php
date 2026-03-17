@@ -83,9 +83,11 @@ Route::prefix('api/goods')->group(function () {
  * ----------------------------------------------------------------------------
  */
 
-Route::get('/goods/excel-upload', [GoodsController::class, 'excelUploadView'])->name('goods.excel-upload');
+Route::get('/goods/excel-upload', [GoodsController::class, 'excelUploadView'])->middleware('auth')->name('goods.excel-upload');
+Route::get('/goods/excel-upload-global', [GoodsController::class, 'excelUploadGlobalView'])->middleware('auth')->name('goods.excel-upload-global');
 
-Route::get('api/goods/download-template', [GoodsController::class, 'downloadTemplate'])->name('goods.download-template');
+Route::get('api/goods/download-template', [GoodsController::class, 'downloadTemplate'])->middleware('auth')->name('goods.download-template');
+Route::post('api/goods/batchCreateGlobal', [GoodsController::class, 'batchCreateGlobal'])->middleware('auth')->name('goods.batchCreateGlobal');
 
 
 /**
@@ -135,6 +137,8 @@ Route::prefix('api/goods-inventory')->group(function () {
     Route::post('/update-serial', [GoodsInventoryController::class, 'updateSerial'])->name('goods-inventory.update-serial');
     Route::post('/remove-good', [GoodsInventoryController::class, 'removeGood']);
     Route::post('/remove-good-serial', [GoodsInventoryController::class, 'removeGoodSerial']);
+    Route::post('/batchCreate/{inventoryId}', [GoodsInventoryController::class, 'batchCreateFromExcel'])->name('goods-inventory.batchCreate');
+    Route::get('/download-template', [GoodsInventoryController::class, 'downloadInventoryTemplate'])->name('goods-inventory.download-template');
 });
 
 

@@ -8,12 +8,16 @@
     <div class="goods-header">
         <h2>Catalogo de bienes</h2>
 
-        {{-- Botón subir Excel --}}
+        {{-- Botones Excel --}}
         @if (Auth::user()->role === 'administrador')
-            <label class="excel-upload-btn" title="Subir Excel"
-                onclick="loadContent( '{{ route('goods.excel-upload') }}' )">
+            <label class="excel-upload-btn" title="Cargar Excel con localización (asigna a inventarios)"
+                onclick="loadContent( '{{ route('goods.excel-upload-global') }}', { onSuccess: () => initFormsGlobalExcel() } )">
                 <i class="fas fa-file-excel"></i>
             </label>
+            {{-- <label class="excel-upload-btn" title="Cargar Excel al catálogo"
+                onclick="loadContent( '{{ route('goods.excel-upload') }}' )">
+                <i class="fas fa-file-excel"></i>
+            </label> --}}
         @endif
     </div>
 

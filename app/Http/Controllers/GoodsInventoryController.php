@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Asset;
 use App\Models\Inventory;
 use App\Services\GoodsInventoryService;
 use App\Helpers\ActivityLogger;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class GoodsInventoryController extends Controller
 {
@@ -605,5 +611,199 @@ class GoodsInventoryController extends Controller
                 'message' => 'Error al dar de baja el bien serial: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+
+    /**
+     * Carga masiva de bienes a un inventario desde Excel
+     * POST /api/goods-inventory/batchCreate/{inventoryId}
+     *
+     * Columnas esperadas: Bien*, Tipo*, Serial, Cantidad, Marca, Modelo,
+     *                     Descripcion, Estado, Color, Condiciones, Fecha Ingreso
+     */
+    public function batchCreateFromExcel(Request $request, int $inventoryId)
+    {
+        abort_if(auth()->user()->role !== 'administrador', 403);
+
+        $inventory = Inventory::findOrFail($inventoryId);
+
+        $rows = $request->input('rows', []);
+
+        if (empty($rows)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se recibieron datos válidos.'
+            ], 400);
+        }
+
+        $created = 0;
+        $errors  = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $i => $row) {
+                $nombre   = trim($row['bien']        ?? '');
+                $tipo     = trim($row['tipo']        ?? 'Serial');
+                $serial   = trim($row['serial']      ?? '');
+                $cantidad = intval($row['cantidad']  ?? 1);
+                $marca    = trim($row['marca']       ?? '');
+                $modelo   = trim($row['modelo']      ?? '');
+                $desc     = trim($row['descripcion'] ?? '');
+                $estado   = trim($row['estado']      ?? 'activo');
+                $color    = trim($row['color']       ?? '');
+                $condicion = trim($row['condiciones'] ?? '');
+                $fecha    = trim($row['fecha_ingreso'] ?? '');
+
+                if ($nombre === '') {
+                    $errors[] = "Fila {$i}: nombre vacío.";
+                    continue;
+                }
+
+                // Normalizar tipo
+                $tipoNorm = strtolower($tipo) === 'cantidad' ? 'Cantidad' : 'Serial';
+
+                // Buscar o crear el bien en el catálogo global
+                $asset = Asset::firstOrCreate(
+                    ['name' => $nombre],
+                    ['type' => $tipoNorm]
+                );
+
+                if ($tipoNorm === 'Serial') {
+                    if ($serial === '') {
+                        $errors[] = "Fila {$i}: serial vacío para '{$nombre}'.";
+                        continue;
+                    }
+
+                    $validEstados = ['activo', 'inactivo', 'en_mantenimiento'];
+                    $estadoFinal  = in_array($estado, $validEstados) ? $estado : 'activo';
+
+                    $result = $this->service->addSerial($inventoryId, $asset->id, [
+                        'serial'               => $serial,
+                        'brand'                => $marca,
+                        'model'                => $modelo,
+                        'description'          => $desc,
+                        'state'                => $estadoFinal,
+                        'color'                => $color,
+                        'technical_conditions' => $condicion,
+                        'entry_date'           => $fecha ?: now()->toDateString(),
+                    ]);
+
+                    if (!$result) {
+                        $errors[] = "Fila {$i}: serial '{$serial}' ya existe.";
+                    } else {
+                        $created++;
+                    }
+                } else {
+                    if ($cantidad < 1) $cantidad = 1;
+                    $this->service->addQuantity($inventoryId, $asset->id, $cantidad);
+                    $created++;
+                }
+            }
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno: ' . $e->getMessage()
+            ], 500);
+        }
+
+        if ($created > 0) {
+            ActivityLogger::custom(
+                'batch_create',
+                "Cargó {$created} bien(es) al inventario: {$inventory->name}",
+                ['model' => 'AssetInventory', 'count' => $created]
+            );
+        }
+
+        $message = "Se cargaron {$created} bien(es) exitosamente.";
+        if (!empty($errors)) {
+            $message .= ' ' . count($errors) . ' error(es).';
+        }
+
+        return response()->json([
+            'success' => $created > 0,
+            'created' => $created,
+            'errors'  => $errors,
+            'message' => $message,
+        ]);
+    }
+
+
+    /**
+     * Descarga la plantilla Excel para carga masiva en inventario
+     * GET /api/goods-inventory/download-template
+     */
+    public function downloadInventoryTemplate()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Plantilla');
+
+        // ── Encabezados ──────────────────────────────────────────────
+        $headers = [
+            'A1' => 'Bien*',
+            'B1' => 'Tipo*',
+            'C1' => 'Serial',
+            'D1' => 'Cantidad',
+            'E1' => 'Marca',
+            'F1' => 'Modelo',
+            'G1' => 'Descripcion',
+            'H1' => 'Estado',
+            'I1' => 'Color',
+            'J1' => 'Condiciones',
+            'K1' => 'Fecha Ingreso',
+        ];
+
+        foreach ($headers as $cell => $label) {
+            $sheet->setCellValue($cell, $label);
+        }
+
+        // ── Estilo encabezados ────────────────────────────────────────
+        $headerRange = 'A1:K1';
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1B5E20']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        // ── Anchos de columna ─────────────────────────────────────────
+        $widths = ['A'=>30,'B'=>12,'C'=>20,'D'=>12,'E'=>18,'F'=>18,'G'=>30,'H'=>20,'I'=>14,'J'=>30,'K'=>16];
+        foreach ($widths as $col => $w) {
+            $sheet->getColumnDimension($col)->setWidth($w);
+        }
+
+        // ── Filas de ejemplo ──────────────────────────────────────────
+        $examples = [
+            ['AIRE ACONDICIONADO MINI SPLIT', 'Serial',   'ABC-001', '',  'Samsung',      'AS24UBAN', '',  'activo', 'Blanco', 'Buen estado', date('Y-m-d')],
+            ['SILLA ERGONOMICA',              'Cantidad',  '',        '5', 'Rimax',        '',         '',  '',       '',       '',            ''],
+        ];
+
+        foreach ($examples as $rowIdx => $example) {
+            $sheet->fromArray($example, null, 'A' . ($rowIdx + 2));
+        }
+
+        // ── Nota informativa ─────────────────────────────────────────
+        $sheet->setCellValue('A5', '* Campos obligatorios. Tipo: Serial o Cantidad. Estado: activo, inactivo, en_mantenimiento.');
+        $sheet->getStyle('A5')->applyFromArray([
+            'font' => ['italic' => true, 'color' => ['rgb' => '555555']],
+        ]);
+        $sheet->mergeCells('A5:K5');
+
+        // ── Generar y descargar ───────────────────────────────────────
+        $filename = 'Plantilla_Carga_Inventario.xlsx';
+        $writer   = new Xlsx($spreadsheet);
+
+        return response()->stream(
+            function () use ($writer) { $writer->save('php://output'); },
+            200,
+            [
+                'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Cache-Control'       => 'max-age=0',
+            ]
+        );
     }
 }
