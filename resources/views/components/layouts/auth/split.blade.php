@@ -5,51 +5,11 @@
     </head>
     <body class="min-h-screen bg-white antialiased">
         <div class="relative grid h-dvh flex-col items-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            
+
             <!-- Background image -->
             <div class="absolute inset-0 z-[-20] bg-cover" style="background-image: url('{{ asset('images/fondo-uniguajira.jpeg') }}');"></div>
-            <!-- Figura 1 -->
-            <div style="
-            position:absolute;
-            z-index:-1;
-            opacity:0.6;
-            top:8%;
-            left:3.5%;
-            width:525px;
-            height:230px;
-            -- border-radius:50%;
-            background-color:#000;
-            animation:float 12s ease-in-out infinite;
-            "></div>
 
-            <!-- Figura 2 -->
-            <div style="
-            position:absolute;
-            z-index:-1;
-            opacity:0.6;
-            bottom:3%;
-            right:3%;
-            width:150px;
-            height:150px;
-            border-radius:50%;
-            background-color:#a3333d;
-            animation:float 8s ease-in-out infinite;
-            "></div>
-
-            <!-- Figura 3 -->
-            <div style="
-            position:absolute;
-            z-index:-1;
-            opacity:0.6;
-            top:7%;
-            right:32%;
-            width:180px;
-            height:180px;
-            border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;
-            background-color:#ad3728;
-            animation:float 10s ease-in-out infinite;
-            "></div>
-            <!-- Animación (esto NO puede ir inline, debe ir en <style>) -->
+            <!-- Animación -->
             <style>
             @keyframes float {
             0% { transform: translateY(0px) rotate(0deg); }
@@ -64,10 +24,20 @@
 
                 <!-- Bienvenida y Features -->
                 <div class="relative z-20 my-auto p-3 space-y-4">
-                    <div class="space-y-2">
+                    <!-- Figura 1: anclada al bloque de título -->
+                    <div class="relative space-y-2">
+                        <!-- Figura 1 -->
+                        <div style="
+                        position:absolute;
+                        z-index:-1;
+                        opacity:0.6;
+                        inset:-10px;
+                        background-color:#000;
+                        animation:float 12s ease-in-out infinite;
+                        "></div>
                         <h1 class="flex items-center text-4xl font-bold leading-tight">
                                 <x-app-logo-icon />
-                                <span>Bienvenido a 
+                                <span>Bienvenido a <br>
                                     <span class="text-[#ad3728] drop-shadow-lg">
                                         {{ config('app.name', 'Laravel') }}
                                     </span>
@@ -80,19 +50,19 @@
 
                     <!-- Feature highlights -->
                     <div class="space-y-4">
-                        <x-feature-box 
-                            title="Registrar Bienes" 
-                            description="Añade nuevos activos al sistema con facilidad" 
+                        <x-feature-box
+                            title="Registrar Bienes"
+                            description="Añade nuevos activos al sistema con facilidad"
                             icon-type="plus-circle"
                         />
-                        <x-feature-box 
-                            title="Administrar Inventarios" 
-                            description="Organiza bienes por ubicación y estado" 
+                        <x-feature-box
+                            title="Administrar Inventarios"
+                            description="Organiza bienes por ubicación y estado"
                             icon-type="clipboard-document-check"
                         />
-                        <x-feature-box 
-                            title="Generar Reportes" 
-                            description="Obtén informes detallados y estadísticas" 
+                        <x-feature-box
+                            title="Generar Reportes"
+                            description="Obtén informes detallados y estadísticas"
                             icon-type="chart-bar"
                         />
                     </div>
@@ -114,7 +84,36 @@
             <!-- Right side (Login) -->
             <div class="h-full flex items-center">
                 <div class="absolute inset-0 z-[-20] bg-neutral-900/30"></div>
-                <div class="bg-neutral-900/65 mx-auto p-3 flex w-full flex-col justify-center space-y-6 sm:w-[400px] rounded-lg">
+                <!-- Login card: referencia para anclar los círculos decorativos -->
+                <div class="relative bg-neutral-900/65 mx-auto p-3 flex w-full flex-col justify-center space-y-6 sm:w-[400px] rounded-lg">
+                    <!-- Figura 3: anclada a esquina superior-izquierda de la card -->
+                    <div style="
+                    position:absolute;
+                    z-index:-1;
+                    opacity:0.6;
+                    top:-60px;
+                    left:-65px;
+                    width:180px;
+                    height:180px;
+                    border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;
+                    background-color:#ad3728;
+                    animation:float 10s ease-in-out infinite;
+                    "></div>
+
+                    <!-- Figura 2: anclada a esquina inferior-derecha de la card -->
+                    <div style="
+                    position:absolute;
+                    z-index:-1;
+                    opacity:0.6;
+                    bottom:-80px;
+                    right:-60px;
+                    width:150px;
+                    height:150px;
+                    border-radius:50%;
+                    background-color:#a3333d;
+                    animation:float 8s ease-in-out infinite;
+                    "></div>
+
                     <a class="z-20 flex flex-col items-center gap-2 font-medium lg:hidden">
                         <span class="flex h-9 w-9 items-center justify-center rounded-md">
                             <x-app-logo-icon />

@@ -6,11 +6,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Asset;
 use App\Models\AssetInventory;
+use App\Models\Inventory;
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\ActivityLogger;
+use App\Services\GoodsInventoryService;
 
 class GoodsController extends Controller
 {
+    protected $inventoryService;
+
+    public function __construct(GoodsInventoryService $inventoryService)
+    {
+        $this->inventoryService = $inventoryService;
+    }
+
     /**
      * Muestra un listado del recurso.
      * Se obtienen los datos desde una vista de base de datos para mejorar la eficiencia de las consultas.
@@ -335,5 +344,152 @@ class GoodsController extends Controller
         }
 
         return view('goods.excel-upload');
+    }
+
+    /**
+     * Vista para carga masiva global con asignación a inventario
+     * GET /goods/excel-upload-global
+     */
+    public function excelUploadGlobalView(Request $request)
+    {
+        if ($request->ajax()) {
+            return view('components.modal.goods.excel-upload-global')
+                ->renderSections()['content'];
+        }
+
+        return view('goods.excel-upload-global');
+    }
+
+    /**
+     * Carga masiva global de bienes: crea en catálogo y, si hay localización,
+     * asigna al inventario cuyo nombre coincida (case-insensitive).
+     * POST /api/goods/batchCreateGlobal
+     */
+    public function batchCreateGlobal(Request $request)
+    {
+        abort_if(auth()->user()->role !== 'administrador', 403);
+
+        $rows = $request->input('rows', []);
+
+        if (empty($rows)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se recibieron datos válidos.',
+            ], 400);
+        }
+
+        $created        = 0;
+        $assigned       = 0;
+        $errors         = [];
+        $createdAssets  = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $i => $row) {
+                $nombre       = trim($row['bien']          ?? '');
+                $tipo         = trim($row['tipo']          ?? 'Serial');
+                $localizacion = trim($row['localizacion']  ?? '');
+                $serial       = trim($row['serial']        ?? '');
+                $cantidad     = max(1, intval($row['cantidad'] ?? 1));
+                $marca        = trim($row['marca']         ?? '');
+                $modelo       = trim($row['modelo']        ?? '');
+                $desc         = trim($row['descripcion']   ?? '');
+                $estado       = trim($row['estado']        ?? 'activo');
+                $color        = trim($row['color']         ?? '');
+                $condicion    = trim($row['condiciones']   ?? '');
+                $fecha        = trim($row['fecha_ingreso'] ?? '');
+
+                if ($nombre === '') {
+                    $errors[] = "Fila {$i}: nombre de bien vacío.";
+                    continue;
+                }
+
+                $tipoNorm = strtolower($tipo) === 'cantidad' ? 'Cantidad' : 'Serial';
+
+                // 1. Crear o reutilizar bien en el catálogo global
+                $asset = Asset::firstOrCreate(
+                    ['name' => $nombre],
+                    ['type' => $tipoNorm]
+                );
+
+                $createdAssets[] = $asset->name;
+                $created++;
+
+                // 2. Si hay localización, buscar inventario (case-insensitive + trim)
+                if ($localizacion !== '') {
+                    $inventory = Inventory::whereRaw(
+                        'LOWER(TRIM(name)) = ?',
+                        [mb_strtolower(trim($localizacion))]
+                    )->first();
+
+                    if (!$inventory) {
+                        $errors[] = "Fila {$i}: inventario '{$localizacion}' no encontrado (bien '{$nombre}' creado en catálogo).";
+                    } else {
+                        $validEstados = ['activo', 'inactivo', 'en_mantenimiento'];
+                        $estadoFinal  = in_array($estado, $validEstados) ? $estado : 'activo';
+
+                        if ($tipoNorm === 'Serial') {
+                            if ($serial === '') {
+                                $errors[] = "Fila {$i}: serial vacío para '{$nombre}' (bien creado en catálogo sin asignar).";
+                            } else {
+                                $result = $this->inventoryService->addSerial(
+                                    $inventory->id,
+                                    $asset->id,
+                                    [
+                                        'serial'               => $serial,
+                                        'brand'                => $marca,
+                                        'model'                => $modelo,
+                                        'description'          => $desc,
+                                        'state'                => $estadoFinal,
+                                        'color'                => $color,
+                                        'technical_conditions' => $condicion,
+                                        'entry_date'           => $fecha ?: now()->toDateString(),
+                                    ]
+                                );
+
+                                if (!$result) {
+                                    $errors[] = "Fila {$i}: serial '{$serial}' ya existe.";
+                                } else {
+                                    $assigned++;
+                                }
+                            }
+                        } else {
+                            $this->inventoryService->addQuantity($inventory->id, $asset->id, $cantidad);
+                            $assigned++;
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        if ($created > 0) {
+            ActivityLogger::custom(
+                'batch_create',
+                "Carga global: {$created} bien(es) al catálogo, {$assigned} asignado(s) a inventario.",
+                ['model' => 'Asset', 'count' => $created, 'assigned' => $assigned]
+            );
+        }
+
+        $message = "Se procesaron {$created} bien(es): {$assigned} asignado(s) a inventario.";
+        if (!empty($errors)) {
+            $message .= ' ' . count($errors) . ' advertencia(s).';
+        }
+
+        return response()->json([
+            'success'  => $created > 0,
+            'created'  => $created,
+            'assigned' => $assigned,
+            'errors'   => $errors,
+            'message'  => $message,
+        ]);
     }
 }
