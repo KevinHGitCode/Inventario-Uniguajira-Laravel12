@@ -49,7 +49,7 @@
     @if(Auth::user()->role === 'administrador')
         <script src="{{ asset('assets/js/goods.js') }}?v=2"></script>
         <script src="{{ asset('assets/js/goods-excel-upload.js') }}?v=2"></script>
-        <script src="{{ asset('assets/js/goods-excel-upload-global.js') }}?v=2"></script>
+        <script src="{{ asset('assets/js/goods-excel-upload-global.js') }}?v=4"></script>
     @endif
 
     <script src="{{ asset('assets/js/user.js') }}"></script>
@@ -58,7 +58,7 @@
     <script src="{{ asset('assets/js/inventory/groups.js') }}"></script>
     <script src="{{ asset('assets/js/inventory/goodsInventory.js') }}"></script>
     @if(Auth::user()->role === 'administrador')
-        <script src="{{ asset('assets/js/inventory/goods-inventory-excel-upload.js') }}?v=2"></script>
+        <script src="{{ asset('assets/js/inventory/goods-inventory-excel-upload.js') }}?v=4"></script>
     @endif
     <script src="{{ asset('assets/js/inventory/goodsSerialsInventory.js') }}"></script>
     <script src="{{ asset('assets/js/inventory/formGoodInventory.js') }}"></script>

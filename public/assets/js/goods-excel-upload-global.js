@@ -113,64 +113,174 @@ function globalExcelParsearFilas(jsonData) {
     return rows;
 }
 
-// ── Renderizar tabla de previsualización ──────────────────────────────────────
+// ── Inyectar estilos de celdas editables (una sola vez) ───────────────────────
+
+(function globalExcelInjectStyles() {
+    if (document.getElementById('global-excel-edit-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'global-excel-edit-styles';
+    s.textContent = `
+        .g-edit-cell {
+            min-width: 60px; padding: 2px 5px; border-radius: 4px;
+            border: 1px solid transparent; cursor: text; display: inline-block;
+            width: 100%; box-sizing: border-box; font-size: 0.85rem;
+        }
+        .g-edit-cell:focus {
+            border-color: #1B5E20; background: #f0faf0;
+            outline: none; box-shadow: 0 0 0 2px #c8e6c9;
+        }
+        .g-edit-cell:hover { border-color: #ccc; }
+        .g-edit-cell-disabled {
+            min-width: 60px; padding: 2px 5px; font-size: 0.85rem;
+            color: #bbb; font-style: italic;
+        }
+        .g-edit-select {
+            border: 1px solid #ddd; border-radius: 4px;
+            padding: 2px 4px; font-size: 0.82rem; background: #fff;
+            cursor: pointer; width: 100%;
+        }
+        .g-edit-select:focus { border-color: #1B5E20; outline: none; }
+        #globalPreviewBody tr:hover td { background: #fafafa; }
+        #globalPreviewBody tr.loc-error td { background: #fff3f3; }
+        #globalPreviewBody tr.loc-error .g-edit-cell[data-field="localizacion"] {
+            border-color: #c62828; background: #ffebee;
+        }
+    `;
+    document.head.appendChild(s);
+})();
+
+// ── Renderizar tabla de previsualización (celdas editables) ───────────────────
 
 function globalExcelRenderizarTabla(rows) {
     const tbody = document.getElementById('globalPreviewBody');
     tbody.innerHTML = '';
 
-    rows.forEach((row, i) => {
+    rows.forEach((row) => {
+        const tipoNorm  = row.tipo.toLowerCase() === 'cantidad' ? 'Cantidad' : 'Serial';
+        const esSerial  = tipoNorm === 'Serial';
+        const estadoVal = row.estado === 'inactivo' ? 'inactivo' : 'activo';
+
+        // Serial editable solo si tipo Serial; Cantidad editable solo si tipo Cantidad
+        const serialCell   = esSerial
+            ? `<div class="g-edit-cell" contenteditable="plaintext-only" data-field="serial">${row.serial ?? ''}</div>`
+            : `<span class="g-edit-cell-disabled" data-field="serial">—</span>`;
+
+        const cantidadCell = !esSerial
+            ? `<div class="g-edit-cell" contenteditable="plaintext-only" data-field="cantidad">${row.cantidad || '1'}</div>`
+            : `<span class="g-edit-cell-disabled" data-field="cantidad">—</span>`;
+
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #eee';
 
-        const tipoNorm = row.tipo.toLowerCase() === 'cantidad' ? 'Cantidad' : 'Serial';
-
-        // Indicador visual de si tiene localización
-        const locBadge = row.localizacion
-            ? `<span style="background:#e8f5e9; color:#1B5E20; padding:2px 6px; border-radius:4px; font-size:0.8rem;">
-                   <i class="fas fa-map-marker-alt"></i> ${row.localizacion}
-               </span>`
-            : `<span style="color:#aaa; font-size:0.8rem;">— solo catálogo</span>`;
-
         tr.innerHTML = `
-            <td style="padding:6px 8px;">${row.bien}</td>
-            <td style="padding:6px 8px;">${tipoNorm}</td>
-            <td style="padding:6px 8px;">${locBadge}</td>
-            <td style="padding:6px 8px;">${tipoNorm === 'Serial' ? (row.serial || '<em style="color:#aaa">vacío</em>') : '—'}</td>
-            <td style="padding:6px 8px;">${tipoNorm === 'Cantidad' ? (row.cantidad || '1') : '—'}</td>
-            <td style="padding:6px 8px;">${row.marca}</td>
-            <td style="padding:6px 8px;">${row.modelo}</td>
-            <td style="padding:6px 8px;">${row.estado || 'activo'}</td>
-            <td style="padding:6px 8px;">
+            <td style="padding:4px 6px;">
+                <div class="g-edit-cell" contenteditable="plaintext-only" data-field="bien">${row.bien}</div>
+            </td>
+            <td style="padding:4px 6px;">
+                <span data-field="tipo" style="font-size:0.85rem;">${tipoNorm}</span>
+            </td>
+            <td style="padding:4px 6px;">
+                <div class="g-edit-cell" contenteditable="plaintext-only" data-field="localizacion"
+                     title="Nombre del inventario (opcional)">${row.localizacion ?? ''}</div>
+            </td>
+            <td style="padding:4px 6px;">${serialCell}</td>
+            <td style="padding:4px 6px;">${cantidadCell}</td>
+            <td style="padding:4px 6px;">
+                <div class="g-edit-cell" contenteditable="plaintext-only" data-field="marca">${row.marca ?? ''}</div>
+            </td>
+            <td style="padding:4px 6px;">
+                <div class="g-edit-cell" contenteditable="plaintext-only" data-field="modelo">${row.modelo ?? ''}</div>
+            </td>
+            <td style="padding:4px 6px;">
+                <select class="g-edit-select" data-field="estado">
+                    <option value="activo"   ${estadoVal === 'activo'   ? 'selected' : ''}>activo</option>
+                    <option value="inactivo" ${estadoVal === 'inactivo' ? 'selected' : ''}>inactivo</option>
+                </select>
+            </td>
+            <td style="padding:4px 10px; text-align:center;">
                 <i class="fas fa-times" style="cursor:pointer; color:#c62828;"
-                   onclick="globalExcelEliminarFila(${i})" title="Eliminar fila"></i>
+                   onclick="globalExcelEliminarFila(this)" title="Eliminar fila"></i>
             </td>
         `;
 
         tbody.appendChild(tr);
     });
 
-    const table = document.getElementById('globalPreviewTable');
-    table.classList.remove('hidden');
-    table.dataset.rows = JSON.stringify(rows);
-
+    document.getElementById('globalPreviewTable').classList.remove('hidden');
     globalExcelActualizarBoton();
+}
+
+// ── Leer filas desde el DOM (respeta ediciones manuales) ─────────────────────
+
+function globalExcelLeerFilasDeDOM() {
+    const tbody = document.getElementById('globalPreviewBody');
+    const rows  = [];
+
+    tbody.querySelectorAll('tr').forEach(tr => {
+        const get = field => {
+            const el = tr.querySelector(`[data-field="${field}"]`);
+            if (!el) return '';
+            return el.tagName === 'SELECT' ? el.value : el.textContent.trim();
+        };
+
+        const bien = get('bien');
+        if (!bien) return;
+
+        const tipo    = get('tipo'); // texto fijo: 'Serial' o 'Cantidad'
+        const esSerial = tipo === 'Serial';
+
+        rows.push({
+            bien,
+            tipo,
+            localizacion: get('localizacion'),
+            serial:       esSerial  ? get('serial')            : null,
+            cantidad:     !esSerial ? (get('cantidad') || '1') : null,
+            marca:        get('marca'),
+            modelo:       get('modelo'),
+            estado:       get('estado'),
+        });
+    });
+
+    return rows;
+}
+
+// ── Resaltar filas con localización no encontrada ─────────────────────────────
+
+function globalExcelResaltarErroresLocalizacion(errors) {
+    const tbody = document.getElementById('globalPreviewBody');
+    if (!tbody) return;
+
+    // Limpia resaltados previos
+    tbody.querySelectorAll('tr.loc-error').forEach(tr => tr.classList.remove('loc-error'));
+
+    errors.forEach(err => {
+        // El backend devuelve: "Fila X: inventario 'nombre' no encontrado ..."
+        const match = err.match(/inventario '([^']+)' no encontrado/i);
+        if (!match) return;
+
+        const locFallida = match[1].toLowerCase().trim();
+
+        tbody.querySelectorAll('tr').forEach(tr => {
+            const locEl = tr.querySelector('[data-field="localizacion"]');
+            if (locEl && locEl.textContent.trim().toLowerCase() === locFallida) {
+                tr.classList.add('loc-error');
+                locEl.title = `"${match[1]}" no existe en el sistema`;
+            }
+        });
+    });
 }
 
 // ── Eliminar fila ─────────────────────────────────────────────────────────────
 
-function globalExcelEliminarFila(idx) {
-    const table = document.getElementById('globalPreviewTable');
-    const rows  = JSON.parse(table.dataset.rows || '[]');
-    rows.splice(idx, 1);
-    globalExcelRenderizarTabla(rows);
+function globalExcelEliminarFila(btn) {
+    btn.closest('tr').remove();
+    globalExcelActualizarBoton();
 }
 
 // ── Enviar datos al backend ───────────────────────────────────────────────────
 
 async function globalExcelEnviarDatos() {
-    const table = document.getElementById('globalPreviewTable');
-    const rows  = JSON.parse(table.dataset.rows || '[]');
+    const rows = globalExcelLeerFilasDeDOM();
 
     if (!rows.length) return;
 
@@ -196,21 +306,33 @@ async function globalExcelEnviarDatos() {
         const data = await response.json();
         showToast(data);
 
-        // Mostrar advertencias (inventarios no encontrados, seriales duplicados, etc.)
+        // Mostrar advertencias y resaltar filas con localización no encontrada
         if (data.errors && data.errors.length) {
             const list = document.getElementById('globalErrorItems');
+            const locErrors = [];
+
             data.errors.forEach(err => {
                 const li = document.createElement('li');
                 li.textContent = err;
+                // Resalta en rojo las filas cuya localización no existe
+                if (/no encontrado/i.test(err)) {
+                    li.style.fontWeight = 'bold';
+                    locErrors.push(err);
+                }
                 list.appendChild(li);
             });
+
             document.getElementById('globalErrorList').style.display = 'block';
+            if (locErrors.length) globalExcelResaltarErroresLocalizacion(locErrors);
         }
 
         if (data.success) {
-            // Recargar catálogo de bienes
-            loadContent('/goods', { onSuccess: () => { if (typeof initFormsBien === 'function') initFormsBien(); } });
-            globalExcelLimpiarUI();
+            // Solo redirige si no hubo errores de localización (filas corregibles visibles)
+            const tieneLocErrors = (data.errors || []).some(e => /no encontrado/i.test(e));
+            if (!tieneLocErrors) {
+                loadContent('/goods', { onSuccess: () => { if (typeof initFormsBien === 'function') initFormsBien(); } });
+                globalExcelLimpiarUI();
+            }
         }
 
     } catch (err) {
@@ -263,10 +385,7 @@ function globalExcelLimpiarUI() {
     if (tbody) tbody.innerHTML = '';
 
     const table = document.getElementById('globalPreviewTable');
-    if (table) {
-        table.classList.add('hidden');
-        table.dataset.rows = '[]';
-    }
+    if (table) table.classList.add('hidden');
 
     document.getElementById('globalErrorList').style.display = 'none';
     document.getElementById('globalErrorItems').innerHTML    = '';
@@ -277,9 +396,9 @@ function globalExcelLimpiarUI() {
 // ── Estado del botón Enviar ───────────────────────────────────────────────────
 
 function globalExcelActualizarBoton() {
-    const btn  = document.getElementById('btnEnviarExcelGlobal');
-    const rows = JSON.parse(document.getElementById('globalPreviewTable')?.dataset?.rows || '[]');
-    if (btn) btn.disabled = rows.length === 0;
+    const btn   = document.getElementById('btnEnviarExcelGlobal');
+    const count = document.getElementById('globalPreviewBody')?.querySelectorAll('tr').length ?? 0;
+    if (btn) btn.disabled = count === 0;
 }
 
 // ── Exponer funciones en window (necesario para llamadas inline desde HTML) ───

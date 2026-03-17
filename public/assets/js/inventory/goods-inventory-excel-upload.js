@@ -119,33 +119,85 @@ function invParsearFilas(jsonData) {
     return rows;
 }
 
-// ── Renderizar tabla de previsualización ──────────────────────────────────────
+// ── Inyectar estilos de celdas editables (una sola vez) ───────────────────────
+
+(function invExcelInjectStyles() {
+    if (document.getElementById('inv-excel-edit-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'inv-excel-edit-styles';
+    s.textContent = `
+        .i-edit-cell {
+            min-width: 55px; padding: 2px 5px; border-radius: 4px;
+            border: 1px solid transparent; cursor: text; display: inline-block;
+            width: 100%; box-sizing: border-box; font-size: 0.83rem;
+        }
+        .i-edit-cell:focus {
+            border-color: #1B5E20; background: #f0faf0;
+            outline: none; box-shadow: 0 0 0 2px #c8e6c9;
+        }
+        .i-edit-cell:hover { border-color: #ccc; }
+        .i-edit-cell-disabled {
+            min-width: 55px; padding: 2px 5px; font-size: 0.83rem;
+            color: #bbb; font-style: italic;
+        }
+        .i-edit-select {
+            border: 1px solid #ddd; border-radius: 4px;
+            padding: 2px 4px; font-size: 0.82rem; background: #fff;
+            cursor: pointer; width: 100%;
+        }
+        .i-edit-select:focus { border-color: #1B5E20; outline: none; }
+        #invPreviewBody tr:hover td { background: #fafafa; }
+    `;
+    document.head.appendChild(s);
+})();
+
+// ── Renderizar tabla de previsualización (celdas editables) ───────────────────
 
 function invRenderizarTabla(rows) {
     const tbody = document.getElementById('invPreviewBody');
     tbody.innerHTML = '';
 
-    rows.forEach((row, i) => {
+    rows.forEach((row) => {
+        const tipoNorm = row.tipo.toLowerCase() === 'cantidad' ? 'Cantidad' : 'Serial';
+        const esSerial = tipoNorm === 'Serial';
+        const estadoVal = row.estado === 'inactivo' ? 'inactivo' : 'activo';
+
+        // Serial editable solo si tipo Serial; Cantidad editable solo si tipo Cantidad
+        const serialCell   = esSerial
+            ? `<div class="i-edit-cell" contenteditable="plaintext-only" data-field="serial">${row.serial ?? ''}</div>`
+            : `<span class="i-edit-cell-disabled" data-field="serial">—</span>`;
+
+        const cantidadCell = !esSerial
+            ? `<div class="i-edit-cell" contenteditable="plaintext-only" data-field="cantidad">${row.cantidad || '1'}</div>`
+            : `<span class="i-edit-cell-disabled" data-field="cantidad">—</span>`;
+
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #eee';
-        tr.dataset.rowIndex   = i;
-
-        const tipoNorm = row.tipo.toLowerCase() === 'cantidad' ? 'Cantidad' : 'Serial';
-        const principal = tipoNorm === 'Serial'
-            ? (row.serial   || '<span style="color:#999">—</span>')
-            : (row.cantidad || '1');
 
         tr.innerHTML = `
-            <td style="padding:6px 8px;">${row.bien}</td>
-            <td style="padding:6px 8px;">${tipoNorm}</td>
-            <td style="padding:6px 8px;">${tipoNorm === 'Serial' ? (row.serial || '<em style="color:#aaa">vacío</em>') : '—'}</td>
-            <td style="padding:6px 8px;">${tipoNorm === 'Cantidad' ? (row.cantidad || '1') : '—'}</td>
-            <td style="padding:6px 8px;">${row.marca}</td>
-            <td style="padding:6px 8px;">${row.modelo}</td>
-            <td style="padding:6px 8px;">${row.estado || 'activo'}</td>
-            <td style="padding:6px 8px;">
+            <td style="padding:4px 6px;">
+                <div class="i-edit-cell" contenteditable="plaintext-only" data-field="bien">${row.bien}</div>
+            </td>
+            <td style="padding:4px 6px;">
+                <span data-field="tipo" style="font-size:0.83rem;">${tipoNorm}</span>
+            </td>
+            <td style="padding:4px 6px;">${serialCell}</td>
+            <td style="padding:4px 6px;">${cantidadCell}</td>
+            <td style="padding:4px 6px;">
+                <div class="i-edit-cell" contenteditable="plaintext-only" data-field="marca">${row.marca ?? ''}</div>
+            </td>
+            <td style="padding:4px 6px;">
+                <div class="i-edit-cell" contenteditable="plaintext-only" data-field="modelo">${row.modelo ?? ''}</div>
+            </td>
+            <td style="padding:4px 6px;">
+                <select class="i-edit-select" data-field="estado">
+                    <option value="activo"   ${estadoVal === 'activo'   ? 'selected' : ''}>activo</option>
+                    <option value="inactivo" ${estadoVal === 'inactivo' ? 'selected' : ''}>inactivo</option>
+                </select>
+            </td>
+            <td style="padding:4px 10px; text-align:center;">
                 <i class="fas fa-times" style="cursor:pointer; color:#c62828;"
-                   onclick="invEliminarFila(this, ${i})" title="Eliminar fila"></i>
+                   onclick="invEliminarFila(this)" title="Eliminar fila"></i>
             </td>
         `;
 
@@ -154,25 +206,52 @@ function invRenderizarTabla(rows) {
 
     document.getElementById('invPreviewTable').classList.remove('hidden');
     invActualizarBotonEnviar();
+}
 
-    // Guardar datos en el DOM para acceso al enviar
-    document.getElementById('invPreviewTable').dataset.rows = JSON.stringify(rows);
+// ── Leer filas desde el DOM (respeta ediciones manuales) ─────────────────────
+
+function invLeerFilasDeDOM() {
+    const tbody = document.getElementById('invPreviewBody');
+    const rows  = [];
+
+    tbody.querySelectorAll('tr').forEach(tr => {
+        const get = field => {
+            const el = tr.querySelector(`[data-field="${field}"]`);
+            if (!el) return '';
+            return el.tagName === 'SELECT' ? el.value : el.textContent.trim();
+        };
+
+        const bien = get('bien');
+        if (!bien) return;
+
+        const tipo    = get('tipo'); // texto fijo: 'Serial' o 'Cantidad'
+        const esSerial = tipo === 'Serial';
+
+        rows.push({
+            bien,
+            tipo,
+            serial:   esSerial  ? get('serial')            : null,
+            cantidad: !esSerial ? (get('cantidad') || '1') : null,
+            marca:    get('marca'),
+            modelo:   get('modelo'),
+            estado:   get('estado'),
+        });
+    });
+
+    return rows;
 }
 
 // ── Eliminar fila de la previsualización ─────────────────────────────────────
 
-function invEliminarFila(btn, idx) {
-    const table   = document.getElementById('invPreviewTable');
-    const rows    = JSON.parse(table.dataset.rows || '[]');
-    rows.splice(idx, 1);
-    invRenderizarTabla(rows);
+function invEliminarFila(btn) {
+    btn.closest('tr').remove();
+    invActualizarBotonEnviar();
 }
 
 // ── Enviar datos al backend ───────────────────────────────────────────────────
 
 async function invEnviarDatos() {
-    const table      = document.getElementById('invPreviewTable');
-    const rows       = JSON.parse(table.dataset.rows || '[]');
+    const rows        = invLeerFilasDeDOM();
     const inventoryId = document.getElementById('inventory-name')?.getAttribute('data-id');
 
     if (!rows.length || !inventoryId) return;
@@ -247,10 +326,7 @@ function invLimpiarUI() {
     if (tbody) tbody.innerHTML = '';
 
     const table = document.getElementById('invPreviewTable');
-    if (table) {
-        table.classList.add('hidden');
-        table.dataset.rows = '[]';
-    }
+    if (table) table.classList.add('hidden');
 
     document.getElementById('invErrorList').style.display = 'none';
     document.getElementById('invErrorItems').innerHTML    = '';
@@ -261,7 +337,7 @@ function invLimpiarUI() {
 // ── Estado del botón Enviar ───────────────────────────────────────────────────
 
 function invActualizarBotonEnviar() {
-    const btn  = document.getElementById('btnEnviarExcelInventario');
-    const rows = JSON.parse(document.getElementById('invPreviewTable')?.dataset?.rows || '[]');
-    if (btn) btn.disabled = rows.length === 0;
+    const btn   = document.getElementById('btnEnviarExcelInventario');
+    const count = document.getElementById('invPreviewBody')?.querySelectorAll('tr').length ?? 0;
+    if (btn) btn.disabled = count === 0;
 }
