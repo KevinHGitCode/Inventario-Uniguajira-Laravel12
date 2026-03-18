@@ -10,34 +10,36 @@
 
 <div
     id="{{ $areaId }}"
-    class="excel-upload-area group relative cursor-pointer overflow-hidden rounded-[30px] border border-dashed border-slate-300/80 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),_transparent_34%),linear-gradient(135deg,_rgba(255,255,255,1),_rgba(248,250,252,1))] shadow-[0_24px_60px_-36px_rgba(15,23,42,0.45)] transition duration-300 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-[0_30px_70px_-38px_rgba(22,163,74,0.28)]"
+    class="group relative cursor-pointer rounded-2xl border-2 border-dashed border-emerald-200 bg-gradient-to-br from-emerald-50/60 to-slate-50 transition-all duration-200 hover:border-emerald-400 hover:bg-emerald-50/80 hover:shadow-lg"
 >
-    <div class="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent"></div>
-    <div class="grid gap-6 p-6 sm:p-8 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-8">
-        <div class="mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[22px] bg-emerald-100 text-emerald-700 shadow-inner ring-1 ring-emerald-200 lg:mx-0">
-            <i class="{{ $iconClass }} text-[1.9rem]"></i>
+    <div class="flex flex-col items-center gap-5 px-8 py-10 text-center sm:flex-row sm:items-center sm:gap-8 sm:text-left">
+
+        {{-- Icono --}}
+        <div class="flex shrink-0 h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 ring-2 ring-emerald-200 group-hover:bg-emerald-200 group-hover:ring-emerald-300 transition-colors duration-200 mx-auto sm:mx-0">
+            <i class="{{ $iconClass }} text-2xl"></i>
         </div>
 
-        <div class="text-center lg:text-left">
-            <p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700/80">Carga desde Excel</p>
-            <p class="mt-3 text-xl font-semibold leading-tight text-slate-900 sm:text-2xl">
-                {{ $prompt }}
-            </p>
-            <p class="mt-3 text-sm leading-6 text-slate-500">
-                Formatos admitidos: <span class="font-semibold text-slate-700">{{ str_replace(',', ', ', $accept) }}</span>
+        {{-- Texto --}}
+        <div class="min-w-0 flex-1">
+            <p class="mb-1 text-xs font-bold uppercase tracking-widest text-emerald-600">Carga desde Excel</p>
+            <p class="text-lg font-semibold text-slate-800 sm:text-xl">{{ $prompt }}</p>
+            <p class="mt-1 text-sm text-slate-500">
+                Formatos admitidos:
+                <span class="font-semibold text-slate-700">{{ str_replace(',', ', ', $accept) }}</span>
             </p>
         </div>
 
-        <div class="flex flex-col items-center gap-3 lg:items-end">
+        {{-- Acción --}}
+        <div class="flex shrink-0 flex-col items-center gap-2 sm:items-end">
             <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100"
+                class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-200 transition-all duration-200 hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                 data-excel-select-trigger="true"
             >
                 <i class="fas fa-arrow-up-from-bracket text-sm"></i>
                 {{ $buttonText }}
             </button>
-            <span class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">o arrastra tu archivo</span>
+            <span class="text-xs font-medium text-slate-400">o arrastra tu archivo</span>
         </div>
     </div>
 

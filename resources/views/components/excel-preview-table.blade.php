@@ -22,30 +22,34 @@
 @endphp
 
 <section class="{{ $wrapperClass }}" @if($wrapperStyle) style="{{ $wrapperStyle }}" @endif>
-    <div class="overflow-hidden rounded-[30px] border border-slate-200 bg-white/95 shadow-[0_26px_70px_-42px_rgba(15,23,42,0.5)] ring-1 ring-slate-200/60 backdrop-blur">
-        <div class="border-b border-slate-200 bg-slate-50/80 px-5 py-5 sm:px-6">
-            <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                <div class="max-w-3xl">
-                    <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700/80">Revision</p>
-                    <div class="mt-3 flex flex-wrap items-center gap-3">
-                        <h3 class="text-2xl font-semibold text-slate-800 sm:text-3xl">{{ $title }}</h3>
-                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+
+        {{-- Cabecera --}}
+        <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest text-emerald-600">Revision</p>
+                    <div class="mt-1 flex flex-wrap items-center gap-2">
+                        <h3 class="text-xl font-semibold text-slate-800">{{ $title }}</h3>
+                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                             Editable
                         </span>
                     </div>
-                    <p class="mt-3 text-sm leading-6 text-slate-500">
+                    <p class="mt-1 text-sm text-slate-500">
                         Revisa los datos, corrige celdas si hace falta y luego confirma el envio.
                     </p>
                 </div>
 
                 @if($clearButtonId || $submitButtonId)
-                    <div class="flex flex-wrap gap-3 lg:justify-end">
+                    <div class="flex items-center gap-2">
                         @if($clearButtonId)
                             <button
                                 id="{{ $clearButtonId }}"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
                             >
+                                <i class="fas fa-times text-xs"></i>
                                 {{ $clearButtonText }}
                             </button>
                         @endif
@@ -54,9 +58,10 @@
                             <button
                                 id="{{ $submitButtonId }}"
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                                class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
                                 disabled
                             >
+                                <i class="fas fa-paper-plane text-xs"></i>
                                 {{ $submitButtonText }}
                             </button>
                         @endif
@@ -65,28 +70,34 @@
             </div>
         </div>
 
-    <div id="{{ $containerId }}" class="px-0">
-        <div class="overflow-x-auto">
-            <table id="{{ $tableId }}" class="hidden table w-full min-w-[820px] !mb-0 !border-0 !bg-transparent !shadow-none divide-y divide-slate-200 text-sm">
-                <thead class="bg-slate-900 text-white">
-                    <tr>
-                    @foreach($resolvedColumns as $column)
-                        <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.24em] text-slate-100">
-                            {{ $column['label'] ?? '' }}
-                        </th>
-                    @endforeach
-                    </tr>
-                </thead>
-                <tbody id="{{ $bodyId }}" class="divide-y divide-slate-100 bg-white"></tbody>
-            </table>
+        {{-- Tabla --}}
+        <div id="{{ $containerId }}">
+            <div class="overflow-x-auto">
+                <table id="{{ $tableId }}" class="hidden w-full min-w-[820px] divide-y divide-slate-100 text-sm">
+                    <thead class="bg-slate-800">
+                        <tr>
+                        @foreach($resolvedColumns as $column)
+                            <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-200">
+                                {{ $column['label'] ?? '' }}
+                            </th>
+                        @endforeach
+                        </tr>
+                    </thead>
+                    <tbody id="{{ $bodyId }}" class="divide-y divide-slate-100 bg-white"></tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
-    @if($errorListId && $errorItemsId)
-        <div id="{{ $errorListId }}" class="m-5 hidden rounded-2xl border border-rose-200 bg-rose-50/80 p-4 shadow-sm">
-            <h4 class="text-sm font-semibold uppercase tracking-[0.18em] text-rose-700">{{ $errorTitle }}</h4>
-            <ul id="{{ $errorItemsId }}" class="mt-3 space-y-2"></ul>
-        </div>
-    @endif
-</div>
+        {{-- Errores --}}
+        @if($errorListId && $errorItemsId)
+            <div id="{{ $errorListId }}" class="m-4 hidden rounded-xl border border-rose-200 bg-rose-50 p-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-exclamation-circle text-rose-500"></i>
+                    <h4 class="text-sm font-semibold text-rose-700">{{ $errorTitle }}</h4>
+                </div>
+                <ul id="{{ $errorItemsId }}" class="space-y-1 text-sm text-rose-600 pl-6 list-disc"></ul>
+            </div>
+        @endif
+
+    </div>
 </section>
