@@ -133,6 +133,7 @@ Route::prefix('api/inventories')->group(function () {
  */
 
 Route::get('/group/{groupId}/inventory/{inventoryId}', [GoodsInventoryController::class, 'goodsIndex'])->name('inventory.goods');
+Route::get('/group/{groupId}/inventory/{inventoryId}/excel-upload', [GoodsInventoryController::class, 'excelUploadView'])->name('inventory.goods.excel-upload');
 
 Route::prefix('api/goods-inventory')->group(function () {
     Route::post('/create', [GoodsInventoryController::class, 'store']);

@@ -47,6 +47,26 @@ class GoodsInventoryController extends Controller
         return view('inventories.goods-inventory', compact('inventory', 'assets'));
     }
 
+    /**
+     * Vista dedicada para la carga masiva de bienes a un inventario
+     */
+    public function excelUploadView(Request $request, $groupId, $inventoryId)
+    {
+        $inventory = Inventory::findOrFail($inventoryId);
+
+        if ((int) $inventory->group_id !== (int) $groupId) {
+            abort(404);
+        }
+
+        if ($request->ajax()) {
+            /** @var \Illuminate\View\View $view */
+            $view = view('inventories.goods-inventory-excel-upload', compact('inventory'));
+            return $view->renderSections()['content'];
+        }
+
+        return view('inventories.goods-inventory-excel-upload', compact('inventory'));
+    }
+
 
     /**
      * Crear bien dentro de un inventario

@@ -195,7 +195,6 @@
     <x-modal.inventory.good-inventory-edit-quantity />
     <x-modal.inventory.good-inventory-remove />
     <x-modal.inventory.inventory-responsible />
-    <x-modal.inventory.good-inventory-excel-upload />
 
     @once
         <script>

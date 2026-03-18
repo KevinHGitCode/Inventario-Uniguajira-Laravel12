@@ -9,10 +9,18 @@ const INV_EXCEL_CONFIG = {
     validEstados:    ['activo', 'inactivo', 'en_mantenimiento'],
 };
 
-// Abre el modal y limpia estado anterior
+// Navega a la vista de carga Excel del inventario actual
 function btnAbrirModalExcelInventario() {
-    invLimpiarUI();
-    mostrarModal('#modalExcelInventario');
+    const inventory = document.getElementById('inventory-name');
+    if (!inventory) return;
+
+    const groupId = inventory.getAttribute('data-group-id');
+    const inventoryId = inventory.getAttribute('data-id');
+
+    loadContent(
+        `/group/${groupId}/inventory/${inventoryId}/excel-upload`,
+        { onSuccess: () => invLimpiarUI() }
+    );
 }
 
 // ── Manejo del archivo ────────────────────────────────────────────────────────
@@ -293,7 +301,6 @@ async function invEnviarDatos() {
         if (data.success) {
             // Recargar la vista del inventario
             const groupId = document.getElementById('inventory-name')?.getAttribute('data-group-id');
-            ocultarModal('#modalExcelInventario');
             loadContent(
                 `/group/${groupId}/inventory/${inventoryId}`,
                 { onSuccess: () => initGoodsInventoryFunctions() }

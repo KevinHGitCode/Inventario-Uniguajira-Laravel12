@@ -58,7 +58,7 @@
     <script src="{{ asset('assets/js/inventory/groups.js') }}"></script>
     <script src="{{ asset('assets/js/inventory/goodsInventory.js') }}"></script>
     @if(Auth::user()->role === 'administrador')
-        <script src="{{ asset('assets/js/inventory/goods-inventory-excel-upload.js') }}?v=4"></script>
+        <script src="{{ asset('assets/js/inventory/goods-inventory-excel-upload.js') }}?v=5"></script>
     @endif
     <script src="{{ asset('assets/js/inventory/goodsSerialsInventory.js') }}"></script>
     <script src="{{ asset('assets/js/inventory/formGoodInventory.js') }}"></script>
