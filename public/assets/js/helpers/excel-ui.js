@@ -1,78 +1,4 @@
 (function () {
-    const STYLE_ID = 'excel-ui-shared-styles';
-
-    function ensureStyles() {
-        if (document.getElementById(STYLE_ID)) return;
-
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `
-            .excel-upload-area.is-dragging {
-                border-color: #1B5E20 !important;
-                background: #f0faf0;
-            }
-            .excel-preview-edit-cell {
-                min-width: 60px;
-                padding: 2px 5px;
-                border-radius: 4px;
-                border: 1px solid transparent;
-                cursor: text;
-                display: inline-block;
-                width: 100%;
-                box-sizing: border-box;
-                font-size: 0.85rem;
-            }
-            .excel-preview-edit-cell:focus {
-                border-color: #1B5E20;
-                background: #f0faf0;
-                outline: none;
-                box-shadow: 0 0 0 2px #c8e6c9;
-            }
-            .excel-preview-edit-cell:hover {
-                border-color: #ccc;
-            }
-            .excel-preview-disabled {
-                min-width: 60px;
-                padding: 2px 5px;
-                font-size: 0.85rem;
-                color: #bbb;
-                font-style: italic;
-            }
-            .excel-preview-edit-select {
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                padding: 2px 4px;
-                font-size: 0.82rem;
-                background: #fff;
-                cursor: pointer;
-                width: 100%;
-            }
-            .excel-preview-edit-select:focus {
-                border-color: #1B5E20;
-                outline: none;
-            }
-            .excel-preview-row:hover td {
-                background: #fafafa;
-            }
-            .excel-preview-row-error td {
-                background: #fff3f3 !important;
-            }
-            .excel-preview-row-error [data-field] {
-                border-color: #c62828 !important;
-                background: #ffebee !important;
-            }
-            .excel-preview-remove {
-                cursor: pointer;
-                color: #c62828;
-                background: transparent;
-                border: none;
-                padding: 0;
-            }
-        `;
-
-        document.head.appendChild(style);
-    }
-
     function escapeHtml(value) {
         return String(value ?? '')
             .replace(/&/g, '&amp;')
@@ -140,16 +66,25 @@
     }
 
     function initUploadArea(config) {
-        ensureStyles();
-
         const area = document.getElementById(config.areaId);
         const input = document.getElementById(config.inputId);
+        const dragClasses = [
+            'border-emerald-500',
+            'bg-emerald-50/90',
+            'ring-4',
+            'ring-emerald-100',
+            'shadow-[0_25px_55px_-35px_rgba(22,163,74,0.55)]',
+            '-translate-y-0.5',
+        ];
 
         if (!area || !input) return null;
 
         if (area.dataset.excelUploadReady === '1') return { area, input };
 
         const openPicker = () => input.click();
+        const toggleDragState = (enabled) => {
+            area.classList[enabled ? 'add' : 'remove'](...dragClasses);
+        };
         const handleFiles = (files, source, event) => {
             if (!files || !files.length || typeof config.onFileSelected !== 'function') return;
             config.onFileSelected(Array.from(files), { source, event, area, input });
@@ -171,16 +106,16 @@
 
         area.addEventListener('dragover', (event) => {
             event.preventDefault();
-            area.classList.add('is-dragging');
+            toggleDragState(true);
         });
 
         area.addEventListener('dragleave', () => {
-            area.classList.remove('is-dragging');
+            toggleDragState(false);
         });
 
         area.addEventListener('drop', (event) => {
             event.preventDefault();
-            area.classList.remove('is-dragging');
+            toggleDragState(false);
 
             const files = event.dataTransfer?.files;
             if (!files || !files.length) return;
@@ -200,8 +135,6 @@
     }
 
     function createPreviewManager(config) {
-        ensureStyles();
-
         const table = document.getElementById(config.tableId);
         const tbody = document.getElementById(config.bodyId);
         const clearButton = config.clearButtonId ? document.getElementById(config.clearButtonId) : null;
@@ -215,16 +148,15 @@
             editable(field, value, options = {}) {
                 const attrs = [];
                 if (options.title) attrs.push(`title="${escapeHtml(options.title)}"`);
-                return `<div class="excel-preview-edit-cell" contenteditable="plaintext-only" data-field="${escapeHtml(field)}" ${attrs.join(' ')}>${escapeHtml(value)}</div>`;
+                return `<div class="excel-preview-edit-cell block min-w-[72px] w-full rounded-xl border border-transparent bg-white px-3 py-2 text-sm text-slate-700 outline-none transition hover:border-slate-300 focus:border-emerald-500 focus:bg-emerald-50/70 focus:ring-4 focus:ring-emerald-100" contenteditable="plaintext-only" data-field="${escapeHtml(field)}" ${attrs.join(' ')}>${escapeHtml(value)}</div>`;
             },
             static(field, value, options = {}) {
                 const attrs = [];
                 if (options.title) attrs.push(`title="${escapeHtml(options.title)}"`);
-                const style = options.style ? ` style="${escapeHtml(options.style)}"` : '';
-                return `<span data-field="${escapeHtml(field)}"${style} ${attrs.join(' ')}>${escapeHtml(value)}</span>`;
+                return `<span class="inline-flex min-w-[72px] items-center rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600" data-field="${escapeHtml(field)}" ${attrs.join(' ')}>${escapeHtml(value)}</span>`;
             },
             placeholder(value = '-') {
-                return `<span class="excel-preview-disabled">${escapeHtml(value)}</span>`;
+                return `<span class="excel-preview-disabled inline-flex min-w-[72px] items-center rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium italic text-slate-400">${escapeHtml(value)}</span>`;
             },
             select(field, value, choices = []) {
                 const options = choices.map((choice) => {
@@ -232,10 +164,10 @@
                     return `<option value="${escapeHtml(choice.value)}" ${selected}>${escapeHtml(choice.label)}</option>`;
                 }).join('');
 
-                return `<select class="excel-preview-edit-select" data-field="${escapeHtml(field)}">${options}</select>`;
+                return `<select class="excel-preview-edit-select w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition hover:border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" data-field="${escapeHtml(field)}">${options}</select>`;
             },
             removeButton(title = 'Eliminar fila') {
-                return `<button type="button" class="excel-preview-remove" data-excel-remove-row="true" title="${escapeHtml(title)}"><i class="fas fa-times"></i></button>`;
+                return `<button type="button" class="excel-preview-remove inline-flex h-9 w-9 items-center justify-center rounded-full text-rose-500 transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-4 focus:ring-rose-100" data-excel-remove-row="true" title="${escapeHtml(title)}"><i class="fas fa-times"></i></button>`;
             },
         };
 
@@ -287,7 +219,7 @@
 
             switch (column.type) {
                 case 'static':
-                    return cellHelpers.static(field, value ?? '', { title: column.title, style: column.textStyle });
+                    return cellHelpers.static(field, value ?? '', { title: column.title });
 
                 case 'select':
                     return cellHelpers.select(field, value ?? '', column.options || []);
@@ -311,13 +243,14 @@
                         : { ...row };
 
                     const tr = document.createElement('tr');
-                    tr.classList.add('excel-preview-row');
-                    tr.style.borderBottom = '1px solid #eee';
+                    tr.classList.add('excel-preview-row', 'border-b', 'border-slate-100', 'transition-colors', 'hover:bg-slate-50/80');
 
                     (config.columns || []).forEach((column) => {
                         const td = document.createElement('td');
-                        td.style.padding = column.padding || '4px 6px';
-                        if (column.align) td.style.textAlign = column.align;
+                        td.classList.add('px-4', 'py-3', 'align-middle', 'text-sm', 'text-slate-700');
+                        if (column.align === 'center') td.classList.add('text-center');
+                        if (column.align === 'right') td.classList.add('text-right');
+                        if (column.type === 'remove') td.classList.add('w-14');
                         td.innerHTML = buildCell(column, row, values, index);
                         tr.appendChild(td);
                     });
@@ -368,40 +301,51 @@
 
                 errors.forEach((error) => {
                     const li = document.createElement('li');
+                    li.className = 'rounded-xl border border-rose-100 bg-white/80 px-3 py-2 text-sm text-rose-700 shadow-sm';
                     li.textContent = error;
                     if (typeof options.emphasize === 'function' && options.emphasize(error)) {
-                        li.style.fontWeight = 'bold';
+                        li.classList.add('font-semibold');
                     }
                     errorItems.appendChild(li);
                 });
 
-                errorList.style.display = errors.length ? 'block' : 'none';
+                errorList.classList.toggle('hidden', errors.length === 0);
             },
 
             clearErrors() {
                 if (!errorList || !errorItems) return;
-                errorList.style.display = 'none';
+                errorList.classList.add('hidden');
                 errorItems.innerHTML = '';
             },
 
-            clearHighlights(className = 'excel-preview-row-error') {
-                tbody.querySelectorAll(`tr.${className}`).forEach((tr) => {
-                    tr.classList.remove(className);
+            clearHighlights() {
+                tbody.querySelectorAll('tr').forEach((tr) => {
+                    tr.classList.remove('bg-rose-50/80');
+                    tr.querySelectorAll('[data-field]').forEach((element) => {
+                        element.classList.remove('border-rose-300', 'bg-rose-50');
+                        if (element.tagName === 'SELECT') {
+                            element.classList.remove('focus:border-rose-400', 'focus:ring-rose-100');
+                        }
+                    });
                 });
             },
 
             highlightRows(predicate, options = {}) {
-                const className = options.className || 'excel-preview-row-error';
-
                 tbody.querySelectorAll('tr').forEach((tr, index) => {
                     if (!predicate(tr, index)) return;
 
-                    tr.classList.add(className);
+                    tr.classList.add('bg-rose-50/80');
 
                     if (options.field) {
                         const fieldElement = tr.querySelector(`[data-field="${options.field}"]`);
-                        if (fieldElement && options.title) {
-                            fieldElement.title = options.title;
+                        if (fieldElement) {
+                            fieldElement.classList.add('border-rose-300', 'bg-rose-50');
+                            if (fieldElement.tagName === 'SELECT') {
+                                fieldElement.classList.add('focus:border-rose-400', 'focus:ring-rose-100');
+                            }
+                            if (options.title) {
+                                fieldElement.title = options.title;
+                            }
                         }
                     }
                 });

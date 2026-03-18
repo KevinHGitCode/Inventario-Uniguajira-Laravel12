@@ -3,7 +3,7 @@
 @section('title', 'Carga Masiva de Bienes')
 
 @section('content')
-<div class="content">
+<div class="content space-y-6">
 
     <div class="goods-header">
         <div>
@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    <p style="color: #555; font-size: 0.9rem; margin-bottom: 1rem;">
+    <p class="max-w-3xl rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
         Sube un archivo Excel con los bienes a agregar a este inventario.
         Los bienes que no existan en el catalogo seran creados automaticamente.
     </p>
@@ -61,6 +61,7 @@
         error-list-id="invErrorList"
         error-items-id="invErrorItems"
         error-title="Errores:"
+        wrapper-class="mt-0"
     />
 
     @once

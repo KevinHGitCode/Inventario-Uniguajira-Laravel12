@@ -11,7 +11,7 @@ const INV_EXCEL_STATE = {
 
 const INV_EXCEL_COLUMNS = [
     { field: 'bien', type: 'text' },
-    { field: 'tipo', type: 'static', value: ({ values }) => values.tipo, textStyle: 'font-size:0.83rem;' },
+    { field: 'tipo', type: 'static', value: ({ values }) => values.tipo },
     {
         field: 'serial',
         render: ({ values, helpers }) => values.esSerial

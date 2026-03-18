@@ -52,6 +52,7 @@ window.initializeScripts = (url) => {
         home: 'initFormsTask',
         goods: 'initFormsBien',
         groups: 'initGroupFunctions',
+        profile: 'initProfileFunctions',
         users: 'initUserFunctions',
         records: 'initHistorialFunctions',
         reports: 'initReportsModule'

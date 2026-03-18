@@ -10,7 +10,7 @@ const GLOBAL_EXCEL_STATE = {
 
 const GLOBAL_EXCEL_COLUMNS = [
     { field: 'bien', type: 'text' },
-    { field: 'tipo', type: 'static', value: ({ values }) => values.tipo, textStyle: 'font-size:0.85rem;' },
+    { field: 'tipo', type: 'static', value: ({ values }) => values.tipo },
     { field: 'localizacion', type: 'text', title: 'Nombre del inventario (opcional)' },
     {
         field: 'serial',

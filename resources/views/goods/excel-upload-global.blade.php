@@ -3,7 +3,7 @@
 @section('title', 'Carga Global con Inventario')
 
 @section('content')
-<div class="content">
+<div class="content space-y-8">
 
     <div class="goods-header">
         <h3>Cargar bienes al catalogo y asignar a inventarios</h3>
@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    <p style="color:#555; font-size:0.9rem; margin-bottom:1rem;">
+    <p class="max-w-4xl rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
         Sube un Excel con los bienes. Si la columna <b>Localizacion</b> tiene el nombre
         de un inventario, el bien se asignara automaticamente a ese inventario.
         El nombre es <b>case-insensitive</b> (mayusculas/minusculas no importan).
@@ -55,6 +55,7 @@
         error-list-id="globalErrorList"
         error-items-id="globalErrorItems"
         error-title="Advertencias:"
+        wrapper-class="mt-0"
     />
 
     @once
