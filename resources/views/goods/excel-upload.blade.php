@@ -133,4 +133,5 @@
     </section>
 
 </div>
+    @include('goods.partials.excel-upload-content')
 @endsection
