@@ -5,16 +5,14 @@
 @section('content')
 <div class="content">
 
-    <div class="goods-header">
-        <h3>Cargar bienes al catalogo y asignar a inventarios</h3>
+    <div class="goods-header excel-page-header">
+        <h3 class="excel-page-title">Cargar bienes al catalogo y asignar a inventarios</h3>
 
-        <div class="flex gap-5">
-            <label class="excel-upload-btn" title="Descargar plantilla"
-                onclick="globalExcelDescargarPlantilla()">
+        <div class="excel-page-actions">
+            <label class="excel-page-action-btn" title="Descargar plantilla" onclick="globalExcelDescargarPlantilla()">
                 <i class="fas fa-download"></i>
             </label>
-            <label class="excel-upload-btn" title="Volver a bienes"
-                onclick="loadContent('/goods', { onSuccess: () => { if (typeof initFormsBien === 'function') initFormsBien(); } })">
+            <label class="excel-page-action-btn" title="Volver a bienes" onclick="loadContent('/goods', { onSuccess: () => { if (typeof initFormsBien === 'function') initFormsBien(); } })">
                 <i class="fas fa-arrow-left"></i>
             </label>
         </div>

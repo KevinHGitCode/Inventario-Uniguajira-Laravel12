@@ -3,17 +3,15 @@
         <span class="close" onclick="ocultarModal('#modalExcelInventario')">&times;</span>
         <h2>Carga masiva de bienes</h2>
 
-        <div class="goods-header" style="display: flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-            <p style="color: #555; font-size: 0.9rem;">
+        <div class="excel-page-header" style="margin-bottom: 1rem;">
+            <p class="excel-page-note" style="margin:0;">
                 Sube un archivo Excel con los bienes a agregar a este inventario.<br>
                 Los bienes que no existan en el catalogo seran creados automaticamente.
             </p>
 
-            <button class="excel-upload-btn" title="Descargar plantilla Excel"
-                onclick="descargarPlantillaInventario()"
-                style="display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0;">
+            <button class="excel-page-action-btn" title="Descargar plantilla Excel" onclick="descargarPlantillaInventario()" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
                 <i class="fas fa-download"></i>
-                <span>Plantilla</span>
+                <span style="font-size:0.75rem;">Plantilla</span>
             </button>
         </div>
 

@@ -97,7 +97,7 @@
     width: 40px;
     height: 40px;
     background-color: rgba(29, 111, 66, 0.1);
-    color: #217346;
+    color: #009141;
     border-radius: 50%;
     cursor: pointer;
 }
@@ -108,6 +108,357 @@
 
 .excel-upload-btn input {
     display: none;
+}
+
+.excel-upload-area {
+    border: 2px dashed #a7f3d0;
+    background: linear-gradient(135deg, rgba(209,250,229,0.6), #f1f5f9);
+    border-radius: 18px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.excel-upload-area:hover {
+    border-color: #34d399;
+    background: rgba(220,252,231,0.8);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.12);
+}
+
+.excel-upload-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+
+.excel-upload-icon-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: #d1fae5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #a7f3d0;
+}
+
+.excel-upload-icon {
+    color: #047857;
+    font-size: 28px;
+}
+
+.excel-upload-content {
+    flex: 1;
+    min-width: 230px;
+}
+
+.excel-upload-tag {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #047857;
+}
+
+.excel-upload-prompt {
+    margin: 4px 0 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.excel-upload-hint {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: #475569;
+}
+
+.excel-upload-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.excel-upload-select-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    background-color: #059669;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.excel-upload-select-btn:hover,
+.excel-upload-select-btn:focus {
+    background-color: #047857;
+}
+
+.excel-upload-footnote {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.excel-upload-input {
+    display: none;
+}
+
+.excel-preview-section {
+    margin-top: 24px;
+}
+
+.excel-preview-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+}
+
+.excel-preview-header {
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.excel-preview-header-left {
+    flex: 1;
+}
+
+.excel-preview-tag {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #059669;
+}
+
+.excel-preview-title-row {
+    margin: 6px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.excel-preview-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.excel-preview-badge {
+    background-color: #dcfce7;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #047857;
+}
+
+.excel-preview-subtitle {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.excel-preview-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.excel-preview-clear-btn,
+.excel-preview-submit-btn {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.excel-preview-clear-btn {
+    background-color: #ffffff;
+    color: #475569;
+}
+
+.excel-preview-clear-btn:hover {
+    background-color: #f8fafc;
+}
+
+.excel-preview-submit-btn {
+    background-color: #059669;
+    color: #ffffff;
+    border-color: #059669;
+}
+
+.excel-preview-submit-btn:hover {
+    background-color: #047857;
+}
+
+.excel-preview-table-container {
+    padding: 16px;
+}
+
+.excel-preview-table-scroll {
+    overflow-x: auto;
+}
+
+.excel-preview-table {
+    width: 100%;
+    min-width: 820px;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.excel-preview-table th,
+.excel-preview-table td {
+    border: 1px solid #e2e8f0;
+    padding: 10px 12px;
+    font-size: 14px;
+    text-align: left;
+}
+
+.excel-preview-table thead {
+    background-color: #0f172a;
+}
+
+.excel-preview-table th {
+    color: #ffffff;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.excel-preview-table tbody tr:nth-child(odd) {
+    background-color: #f8fafc;
+}
+
+.excel-error-list {
+    margin: 14px;
+    border: 1px solid #fecaca;
+    background-color: #fff1f2;
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.excel-error-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: #991b1b;
+}
+
+.excel-error-title h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.excel-error-items {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 14px;
+    color: #991b1b;
+}
+
+.excel-error-items li {
+    margin-bottom: 4px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.excel-page {
+    margin: 0;
+}
+
+.excel-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.excel-page-title {
+    margin: 0 0 4px 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.excel-page-subtitle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.excel-page-meta {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.excel-page-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.excel-page-action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.excel-page-action-btn:hover {
+    background: #ebf8f3;
+}
+
+.excel-page-note,
+.excel-page-warning {
+    max-width: 100%;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 12px 14px;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+
+.excel-page-warning {
+    border-color: #fcd34d;
+    background: #fef3c7;
+    color: #92400e;
 }
 
 #excel-upload-sugar {

@@ -3,54 +3,37 @@
 @section('title', 'Carga Masiva de Bienes')
 
 @section('content')
-<div class="content space-y-6">
+<div class="content excel-page">
 
-    {{-- Encabezado de página --}}
-    <div class="flex items-start justify-between gap-4">
-        <div class="space-y-1">
-            <h3 class="text-2xl font-semibold text-slate-800">Carga masiva de bienes</h3>
-            <span
-                id="inventory-name"
-                class="inline-flex items-center gap-1.5 text-base font-normal text-slate-500"
-                data-id="{{ $inventory->id }}"
-                data-group-id="{{ $inventory->group_id }}"
-            >
-                <i class="fas fa-layer-group text-xs text-slate-400"></i>
+    <div class="excel-page-header">
+        <div>
+            <h3 class="excel-page-title">Carga masiva de bienes</h3>
+            <span id="inventory-name" class="excel-page-subtitle" data-id="{{ $inventory->id }}" data-group-id="{{ $inventory->group_id }}">
+                <i class="fas fa-layer-group"></i>
                 {{ $inventory->name }}
             </span>
             @if ($inventory->responsible)
-                <p class="text-sm font-light text-slate-400">
-                    <i class="fas fa-user mr-1 text-xs"></i>Responsable: {{ $inventory->responsible }}
+                <p class="excel-page-meta">
+                    <i class="fas fa-user"></i>
+                    Responsable: {{ $inventory->responsible }}
                 </p>
             @endif
         </div>
 
-        <div class="flex shrink-0 items-center gap-2">
-            <button
-                type="button"
-                title="Descargar plantilla Excel"
-                onclick="descargarPlantillaInventario()"
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 transition hover:bg-emerald-100 hover:ring-emerald-300"
-            >
-                <i class="fas fa-download text-sm"></i>
+        <div class="excel-page-actions">
+            <button type="button" title="Descargar plantilla Excel" onclick="descargarPlantillaInventario()" class="excel-page-action-btn">
+                <i class="fas fa-download"></i>
             </button>
-            <button
-                type="button"
-                title="Volver al inventario"
-                onclick="loadContent('{{ route('inventory.goods', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id]) }}', { onSuccess: () => initGoodsInventoryFunctions() })"
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-200 hover:ring-slate-300"
-            >
-                <i class="fas fa-arrow-left text-sm"></i>
+            <button type="button" title="Volver al inventario" onclick="loadContent('{{ route('inventory.goods', ['groupId' => $inventory->group_id, 'inventoryId' => $inventory->id]) }}', { onSuccess: () => initGoodsInventoryFunctions() })" class="excel-page-action-btn">
+                <i class="fas fa-arrow-left"></i>
             </button>
         </div>
     </div>
 
-    {{-- Descripción --}}
-    <p class="max-w-3xl rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
+    <p class="excel-page-note">
         Sube un archivo Excel con los bienes a agregar a este inventario.
         Los bienes que no existan en el catalogo seran creados automaticamente.
     </p>
-
 
     <x-excel-upload-area
         area-id="inv-excel-upload-area"
@@ -61,7 +44,7 @@
     />
 
     <x-excel-preview-table
-        title="Previsualizacion"
+        title="Previsualización"
         container-id="inv-excel-preview-table"
         table-id="invPreviewTable"
         body-id="invPreviewBody"
@@ -80,7 +63,7 @@
         error-list-id="invErrorList"
         error-items-id="invErrorItems"
         error-title="Errores:"
-        wrapper-class="mt-0"
+        wrapper-class=""
     />
 
     @once
