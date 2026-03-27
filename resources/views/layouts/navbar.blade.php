@@ -13,6 +13,7 @@
     </div>
 
     <div class="right">
+         <img src="{{ asset('assets/images/Diseño4-1.png') }}" alt="logo 2" class="logo-sem">
         <img
             src="{{ asset(Auth::user()->profile_photo_path ?? 'assets/uploads/img/users/defaultProfile.jpg') }}"
             alt="img-user"
