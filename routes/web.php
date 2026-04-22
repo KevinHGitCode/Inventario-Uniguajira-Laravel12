@@ -38,6 +38,7 @@ use App\Http\Controllers\{
  * 12. Usuarios
  * 13. Historial
  * 14. Perfil
+ * 15. Semillero
  */
 
 
@@ -241,4 +242,13 @@ Route::prefix('api/profile')->group(function () {
     Route::post('update', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 });
+
+/**
+ * 15. Semillero
+ * ----------------------------------------------------------------------------
+ */
+
+Route::get('semillero', function () {
+    return view('semillero.index');
+})->name('semillero.index');
 });
