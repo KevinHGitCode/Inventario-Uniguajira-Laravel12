@@ -11,8 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES') ?: null);
+
         // bloquea rutas de registro si accidentalmente quedan expuestas
         $middleware->prepend(\App\Http\Middleware\BlockRegistration::class);
+        $middleware->web(prepend: [
+            \App\Http\Middleware\StabilizeAuthCookies::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

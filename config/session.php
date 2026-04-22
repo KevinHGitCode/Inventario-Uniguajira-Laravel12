@@ -160,6 +160,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Legacy Session Cookie Domains
+    |--------------------------------------------------------------------------
+    |
+    | Browsers can keep cookies with the same name for both a parent domain and
+    | a host-only domain. When that happens, CSRF validation may receive the
+    | token from one session while Laravel reads a different session cookie.
+    |
+    */
+
+    'legacy_domains' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('SESSION_LEGACY_DOMAINS', ''))
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | HTTPS Only Cookies
     |--------------------------------------------------------------------------
     |

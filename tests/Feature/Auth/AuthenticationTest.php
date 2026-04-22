@@ -9,6 +9,35 @@ test('la pantalla de login puede ser renderizada', function () {
     $response->assertStatus(200);
 });
 
+test('la pantalla de login no se cachea y limpia cookies antiguas del dominio padre', function () {
+    config(['session.legacy_domains' => ['.desarrollougmaicao.com']]);
+
+    $response = $this
+        ->withServerVariables([
+            'HTTP_HOST' => 'inventario.desarrollougmaicao.com',
+            'HTTPS' => 'on',
+        ])
+        ->get('/login');
+
+    $response
+        ->assertStatus(200);
+
+    expect($response->headers->get('Cache-Control'))
+        ->toContain('no-store')
+        ->toContain('no-cache')
+        ->toContain('must-revalidate')
+        ->toContain('max-age=0');
+
+    expect($response->headers->get('Vary'))->toContain('Cookie');
+
+    $setCookieHeaders = $response->headers->all('Set-Cookie');
+
+    expect(implode("\n", $setCookieHeaders))
+        ->toContain('inventario-uniguajira-session=deleted')
+        ->toContain('XSRF-TOKEN=deleted')
+        ->toContain('domain=desarrollougmaicao.com');
+});
+
 test('los usuarios pueden autenticarse usando la pantalla de login', function () {
     $user = User::factory()->withoutTwoFactor()->create();
 
